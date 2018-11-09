@@ -1,5 +1,5 @@
 ---
-title: browser_proxy
+title: 正向代理
 date: 2018-11-09 11:38:34
 categories:
 - 网络编程
@@ -8,6 +8,7 @@ tags:
 - 网络
 - 代理
 ---
+
 # 一. 概述
 
 1. 什么是正向代理?
@@ -79,12 +80,12 @@ shadowsocks信息交换的基本结构图如下, ss_cli代表shadowsocks客户�
 
 ## 4.1 浏览器与ss_cli通信
 1. tcp握手, 浏览器通过socks5发送目标服务器地址
-![image](https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/shadowsocks/browser-ss_cli-1.png)
+![image](https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/shadowsocks/browser-ss_cli-1.jpg)
 
 2. 浏览器与ss_cli之间后续的通信, 此处是https协议
-![image](https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/shadowsocks/browser-ss_cli-2.png)
+![image](https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/shadowsocks/browser-ss_cli-2.jpg)
 > - 时间突变的部分是由于ss_cli需要ss_srv将目标服务器的应答信息发送回来。
 
 ## 4.2 ss_cli与ss_srv通信
 二者的通信格式是自行定义的,
-![image](https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/shadowsocks/ss_cli-ss_srv.png)
+![image](https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/shadowsocks/ss_cli-ss_srv.jpg)

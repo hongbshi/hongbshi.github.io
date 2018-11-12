@@ -1,5 +1,5 @@
 ---
-title: nginx监听套接字
+title: nginx listen指令处理流程
 date: 2018-11-12 16:26:59
 categories:
 - nginx

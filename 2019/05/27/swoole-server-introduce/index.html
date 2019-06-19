@@ -79,22 +79,24 @@
 
 
 
-<meta name="description" content="一. 基础知识1.1 swooleswoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用swoole开发出高性能的server服务。swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。 1.2 网络编程 网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(">
+<meta name="description" content="一. 基础知识1.1 SwooleSwoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用Swoole开发出高性能的server服务。Swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。 1.2 网络编程 网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(">
 <meta name="keywords" content="server,swoole">
 <meta property="og:type" content="article">
 <meta property="og:title" content="swoole_server_introduce">
 <meta property="og:url" content="http://yoursite.com/2019/05/27/swoole-server-introduce/index.html">
 <meta property="og:site_name" content="随园">
-<meta property="og:description" content="一. 基础知识1.1 swooleswoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用swoole开发出高性能的server服务。swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。 1.2 网络编程 网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(">
+<meta property="og:description" content="一. 基础知识1.1 SwooleSwoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用Swoole开发出高性能的server服务。Swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。 1.2 网络编程 网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/tcp/%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5.png">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/tcp/%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5.png">
 <meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20%E7%BB%93%E6%9E%84%E5%9B%BE.jpg">
 <meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20ipc.png">
 <meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20ipc%E5%AE%9E%E4%BE%8B.png">
-<meta property="og:updated_time" content="2019-05-27T02:40:24.408Z">
+<meta property="og:updated_time" content="2019-06-19T11:52:49.845Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="swoole_server_introduce">
-<meta name="twitter:description" content="一. 基础知识1.1 swooleswoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用swoole开发出高性能的server服务。swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。 1.2 网络编程 网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(">
-<meta name="twitter:image" content="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20%E7%BB%93%E6%9E%84%E5%9B%BE.jpg">
+<meta name="twitter:description" content="一. 基础知识1.1 SwooleSwoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用Swoole开发出高性能的server服务。Swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。 1.2 网络编程 网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(">
+<meta name="twitter:image" content="https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/tcp/%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5.png">
 
 
 
@@ -390,22 +392,35 @@
       
 
       
-        <h1 id="一-基础知识"><a href="#一-基础知识" class="headerlink" title="一. 基础知识"></a>一. 基础知识</h1><h2 id="1-1-swoole"><a href="#1-1-swoole" class="headerlink" title="1.1 swoole"></a>1.1 swoole</h2><p>swoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用swoole开发出高性能的server服务。swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。</p>
+        <h1 id="一-基础知识"><a href="#一-基础知识" class="headerlink" title="一. 基础知识"></a>一. 基础知识</h1><h2 id="1-1-Swoole"><a href="#1-1-Swoole" class="headerlink" title="1.1 Swoole"></a>1.1 Swoole</h2><p>Swoole是面向生产环境的php异步网络通信引擎, php开发人员可以利用Swoole开发出高性能的server服务。Swoole的server部分, 内容很多, 也涉及很多的知识点, 本文仅对其server进行简单的概述, 具体的实现细节在后续的文章中再进行详细介绍。</p>
 <h2 id="1-2-网络编程"><a href="#1-2-网络编程" class="headerlink" title="1.2 网络编程"></a>1.2 网络编程</h2><ol>
 <li>网络通信是指在一台(或者多台)机器上启动一个(或者多个)进程, 监听一个(或者多个)端口, 按照某种协议(可以是标准协议http, dns; 也可以是自行定义的协议)与客户端交换信息。</li>
-<li>目前的网络编程多是在tcp, udp或者更上层的协议之上进行编程。swoole的server部分是基于tcp以及udp协议的。</li>
+<li>目前的网络编程多是在tcp, udp或者更上层的协议之上进行编程。Swoole的server部分是基于tcp以及udp协议的。</li>
 <li>利用udp进行编程较为简单, 本文主要介绍tcp协议之上的网络编程</li>
 <li>TCP网络编程主要涉及4种事件,</li>
 </ol>
 <ul>
-<li>连接建立: 主要是指客户端发起连接(connect)以及服务端接受连接(accept)</li>
+<li>连接建立: 主要是指客户端发起连接(<code>connect</code>)以及服务端接受连接(<code>accept</code>)</li>
 <li>消息到达: 服务端接受到客户端发送的数据, 该事件是TCP网络编程最重要的事件, 服务端对于该类事件进行处理时, 可以采用阻塞式或者非阻塞式, 除此之外, 服务端还需要考虑分包, 应用层缓冲区等问题</li>
-<li>消息发送成功: 发送成功是指应用层将数据成功发送到内核的套接字发送缓冲区中, 并不是指客户端成功接受数据。对于低流量的服务而言, 数据通常一次性即可发送完, 并不需要关心此类事件。如果一次性不能将全部数据发送到内核缓冲区, 则需要关心消息是否成功发送(阻塞式编程在系统调用(write, writev, send等)返回后即是发送成功, 非阻塞式编程则需要考虑实际写入的数据是否与预期一致)</li>
-<li>连接断开: 需要考虑客户端断开连接(read返回0)以及服务端断开连接(close, shutdown)</li>
+<li>消息发送成功: 发送成功是指应用层将数据成功发送到内核的套接字发送缓冲区中, 并不是指客户端成功接受数据。对于低流量的服务而言, 数据通常一次性即可发送完, 并不需要关心此类事件。如果一次性不能将全部数据发送到内核缓冲区, 则需要关心消息是否成功发送(阻塞式编程在系统调用(<code>write</code>, <code>writev</code>, <code>send</code>等)返回后即是发送成功, 非阻塞式编程则需要考虑实际写入的数据是否与预期一致)</li>
+<li>连接断开: 需要考虑客户端断开连接(<code>read</code>返回0)以及服务端断开连接(<code>close</code>, <code>shutdown</code>)</li>
+</ul>
+<ol start="5">
+<li>tcp建立连接的过程如下图,<br><img src="https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/tcp/%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5.png" alt></li>
+</ol>
+<ul>
+<li>图中, ACK、SYN表示标志位, seq、ack为tcp包的序号以及确认序号</li>
+</ul>
+<ol start="6">
+<li>tcp断开连接的过程如下图,<br><img src="https://picturestore.nos-eastchina1.126.net/%E7%BD%91%E7%BB%9C/tcp/%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5.png" alt></li>
+</ol>
+<ul>
+<li>上图考虑的是客户端主动断开连接的情况, 服务端主动断开连接也类似</li>
+<li>图中, FIN、ACK表示标志位, seq、ack为tcp包的序号以及确认序号</li>
 </ul>
 <h2 id="1-3-进程间通信"><a href="#1-3-进程间通信" class="headerlink" title="1.3 进程间通信"></a>1.3 进程间通信</h2><ol>
-<li>进程之间的通信有无名管道(pipe), 有名管道(fifo), 信号, 信号量, 套接字, 共享内存等方式</li>
-<li>swoole中采用unix域套接字用于多进程之间的通信(指swoole内部进程之间)</li>
+<li>进程之间的通信有无名管道(pipe), 有名管道(fifo), 信号(signal), 信号量(semaphore), 套接字(socket), 共享内存(shared memory)等方式</li>
+<li>Swoole中采用unix域套接字(套接字的一种)用于多进程之间的通信(指Swoole内部进程之间)</li>
 </ol>
 <h2 id="1-4-socketpair"><a href="#1-4-socketpair" class="headerlink" title="1.4 socketpair"></a>1.4 socketpair</h2><ol>
 <li>socketpair用于创建一个套接字对, 类似于pipe, 不同的是pipe是单向通信, 双向通信需要创建两次, socketpair调用一次即可实现双向通信, 除此之外, 由于使用的是套接字, 还可以定义数据交换的方式</li>
@@ -431,33 +446,33 @@
 <li>会话</li>
 </ol>
 <ul>
-<li>一个会话可以包含多个进程组, 这些进程组中最多只能有一个前台进程组(也可以没有)</li>
-<li>setsid可以创建一个新的会话, 该进程不能是进程组的组长。setsid调用完成后, 该进程成为这个会话的首进程(领头进程), 同时变成一个新的进程组的组长, 如果该进程之前有控制终端, 则该进程与终端的联系被断开</li>
-<li>用户通过终端登录或者网络登录, 会创建一个新的会话</li>
+<li>一个会话可以包含多个进程组, 这些进程组中最多只能有一个前台进程组(也可以没有), 其余为后台进程组</li>
 <li>一个会话最多只能有一个控制终端</li>
+<li>用户通过终端登录或者网络登录, 会创建一个新的会话</li>
+<li>进程调用系统调用<code>setsid</code>可以创建一个新的会话, 调用<code>setsid</code>的进程不能是某个进程组的组长。<code>setsid</code>调用完成后, 该进程成为这个会话的首进程(领头进程), 同时变成一个新的进程组的组长, 如果该进程之前有控制终端, 该进程与终端的联系也被断开</li>
 </ul>
 <ol start="4">
 <li>创建守护进程的方式</li>
 </ol>
 <ul>
-<li>fork子进程后, 父进程退出, 子进程执行setsid即可成为守护进程。这种方式下, 子进程是会话的领头进程, 可以重新打开终端, 此时可以再次fork, fork产生的子进程无法再打开终端。第二次fork并不是必须的, 只是为了防止子进程再次打开终端</li>
-<li>linux提供了daemon函数用于创建守护进程</li>
+<li>fork子进程后, 父进程退出, 子进程执行<code>setsid</code>, 子进程即可成为守护进程。这种方式下, 子进程是会话的领头进程, 可以重新打开终端, 此时可以再次fork, fork产生的子进程无法再打开终端(只有会话的领头进程才能打开终端)。第二次fork并不是必须的, 只是为了防止子进程再次打开终端</li>
+<li>linux提供了daemon函数(该函数并不是系统调用, 为库函数)用于创建守护进程</li>
 </ul>
 <h2 id="1-6-swoole-tcp-server示例"><a href="#1-6-swoole-tcp-server示例" class="headerlink" title="1.6 swoole tcp server示例"></a>1.6 swoole tcp server示例</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">//创建server</span></span><br><span class="line">$serv = <span class="keyword">new</span> Swoole\Server(<span class="string">'0.0.0.0'</span>, <span class="number">9501</span>, SWOOLE_PROCESS, SWOOLE_SOCK_TCP);</span><br><span class="line"><span class="comment">//设置server的参数</span></span><br><span class="line">$serv-&gt;set(<span class="keyword">array</span>(</span><br><span class="line">    <span class="string">'reactor_num'</span> =&gt; <span class="number">2</span>, <span class="comment">//reactor thread num</span></span><br><span class="line">    <span class="string">'worker_num'</span> =&gt; <span class="number">3</span>,  <span class="comment">//worker process num</span></span><br><span class="line">));</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置事件回调</span></span><br><span class="line">$serv-&gt;on(<span class="string">'connect'</span>, <span class="function"><span class="keyword">function</span> <span class="params">($serv, $fd)</span></span>&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"Client:Connect.\n"</span>;</span><br><span class="line">&#125;);</span><br><span class="line">$serv-&gt;on(<span class="string">'receive'</span>, <span class="function"><span class="keyword">function</span> <span class="params">($serv, $fd, $reactor_id, $data)</span> </span>&#123;</span><br><span class="line">    $serv-&gt;send($fd, <span class="string">'Swoole: '</span>.$data);</span><br><span class="line">    $serv-&gt;close($fd);</span><br><span class="line">&#125;);</span><br><span class="line">$serv-&gt;on(<span class="string">'close'</span>, <span class="function"><span class="keyword">function</span> <span class="params">($serv, $fd)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"Client: Close.\n"</span>;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">//启动server</span></span><br><span class="line">$serv-&gt;start();</span><br></pre></td></tr></table></figure>
 <ul>
 <li>上述代码在cli模式下执行时, 经过词法分析, 语法分析生成opcode, 进而交由zend虚拟机执行</li>
-<li>zend虚拟机在执行到$serv-&gt;start()时, 启动swoole server</li>
-<li>上述代码中设置的事件回调是在worker进程中执行, 后文会详细介绍swoole server模型</li>
+<li>zend虚拟机在执行到$serv-&gt;start()时, 启动Swoole server</li>
+<li>上述代码中设置的事件回调是在worker进程中执行, 后文会详细介绍Swoole server模型</li>
 </ul>
 <h1 id="二-swoole-server"><a href="#二-swoole-server" class="headerlink" title="二. swoole server"></a>二. swoole server</h1><h2 id="2-1-base模式"><a href="#2-1-base模式" class="headerlink" title="2.1 base模式"></a>2.1 base模式</h2><ol>
 <li>说明</li>
 </ol>
 <ul>
 <li>base模式采用多进程模型, 这种模型与nginx一致, 每个进程只有一个线程, 主进程负责管理工作进程, 工作进程负责监听端口, 接受连接, 处理请求以及关闭连接</li>
-<li>多个进程同时监听端口, 会有惊群问题, 目前swoole并没有解决</li>
-<li>linux 内核3.9及其后续版本提供了新的套接字参数SO_REUSEPORT, 该参数允许多个进程绑定到同一个端口, 内核在接受到新的连接请求时, 会唤醒其中一个进行处理, 内核层面也会做负载均衡, 可以解决上述的惊群问题</li>
-<li>base模式下, reactor_number参数并没有作用, 因为每个进程只有一个线程</li>
-<li>如果worker进程数设置为1, 则不会fork出worker进程, 主进程直接处理请求</li>
+<li>多个进程同时监听端口, 会有惊群问题, linux 3.9之前版本的内核, Swoole没有解决惊群问题</li>
+<li>linux 内核3.9及其后续版本提供了新的套接字参数SO_REUSEPORT, 该参数允许多个进程绑定到同一个端口, 内核在接受到新的连接请求时, 会唤醒其中一个进行处理, 内核层面也会做负载均衡, 可以解决上述的惊群问题, Swoole也已经加入了这个参数</li>
+<li>base模式下, reactor_number参数并没有实际作用</li>
+<li>如果worker进程数设置为1, 则不会fork出worker进程, 主进程直接处理请求, 这种模式适合调试</li>
 </ul>
 <ol start="2">
 <li>启动过程</li>
@@ -482,7 +497,7 @@
 <li>启动过程</li>
 </ol>
 <ul>
-<li><p>swoole server启动入口: swServer_start函数,</p>
+<li><p>Swoole server启动入口: swServer_start函数,</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">//php 代码中$serv-&gt;start(); 会调用函数, 进行server start</span><br><span class="line">int swServer_start(swServer *serv);</span><br><span class="line"></span><br><span class="line">// 该函数首先进行必要的参数检查</span><br><span class="line">static int swServer_start_check(swServer *serv);</span><br><span class="line">// 其中有,</span><br><span class="line">if (serv-&gt;worker_num &lt; serv-&gt;reactor_num)</span><br><span class="line">&#123;</span><br><span class="line">    serv-&gt;reactor_num = serv-&gt;worker_num;</span><br><span class="line">&#125;//也就是说reactor_num &lt;= worker_num</span><br><span class="line"></span><br><span class="line">//之后执行factory start, 也就是swFactoryProcess_start函数, 该函数会fork出manager进程, manager进程进而fork出worker进程以及task_worker进程</span><br><span class="line">if (factory-&gt;start(factory) &lt; 0)</span><br><span class="line">&#123;</span><br><span class="line">    return SW_ERR;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//然后主进程的主线程生成reactor线程</span><br><span class="line">if (serv-&gt;factory_mode == SW_MODE_BASE)</span><br><span class="line">&#123;</span><br><span class="line">    ret = swReactorProcess_start(serv);</span><br><span class="line">&#125;</span><br><span class="line">else</span><br><span class="line">&#123;</span><br><span class="line">    ret = swReactorThread_start(serv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>如果设置了daemon模式, 在必要的参数检查完后, 先将自己变为守护进程再fork manager进程, 进而创建reactor线程</p>
@@ -495,23 +510,23 @@
 </li>
 </ul>
 <ol start="3">
-<li>结构图<br>swoole process模式结构如下图所示,<br><img src="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20%E7%BB%93%E6%9E%84%E5%9B%BE.jpg" alt="swoole_server"></li>
+<li>结构图<br>Swoole process模式结构如下图所示,<br><img src="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20%E7%BB%93%E6%9E%84%E5%9B%BE.jpg" alt="swoole_server"></li>
 </ol>
 <ul>
 <li>上图并没有考虑task_worker进程, 在默认情况下, task_worker进程数为0</li>
 </ul>
 <h1 id="三-请求处理流程-process模式"><a href="#三-请求处理流程-process模式" class="headerlink" title="三. 请求处理流程(process模式)"></a>三. 请求处理流程(process模式)</h1><h2 id="3-1-reactor线程与worker进程之间的通信"><a href="#3-1-reactor线程与worker进程之间的通信" class="headerlink" title="3.1 reactor线程与worker进程之间的通信"></a>3.1 reactor线程与worker进程之间的通信</h2><ol>
-<li>swoole master进程与worker进程之间的通信如下图所示,<br><img src="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20ipc.png" alt="image"></li>
+<li>Swoole master进程与worker进程之间的通信如下图所示,<br><img src="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20ipc.png" alt="image"></li>
 </ol>
 <ul>
-<li>swoole使用SOCK_DGRAM, 而不是SOCK_STREAM, 这里是因为每个reactor线程负责处理多个请求, reactor接收到请求后会将信息转发给worker进程, 由worker进程负责处理,如果使用SOCK_STREAM, worker进程无法对tcp进行分包, 进而处理请求</li>
-<li>swFactoryProcess_start函数中会根据worker进程数创建对应个数的套接字对, 用于reactor线程与worker进程通信(swPipeUnsock_create函数)</li>
+<li>Swoole使用SOCK_DGRAM, 而不是SOCK_STREAM, 这里是因为每个reactor线程负责处理多个请求, reactor接收到请求后会将信息转发给worker进程, 由worker进程负责处理,如果使用SOCK_STREAM, worker进程无法对tcp进行分包, 进而处理请求</li>
+<li>swFactoryProcess_start函数中会根据worker进程数创建对应个数的套接字对, 用于reactor线程与worker进程通信(详见swPipeUnsock_create函数)</li>
 </ul>
 <ol start="2">
 <li>假设reactor线程有2个, worker进程有3个, 则reactor与worker之间的通信如下图所示,<br><img src="https://picturestore.nos-eastchina1.126.net/swoole/swoole%20process%20ipc%E5%AE%9E%E4%BE%8B.png" alt="image"></li>
 </ol>
 <ul>
-<li>每个reactor线程负责监听几个worker进程, 每个worker进程只有一个reactor线程监听(reactor_num&lt;=worker_num)。swoole默认使用worker_process_id % reactor_num对worker进程进行分配, 交给对应的reactor线程进行监听</li>
+<li>每个reactor线程负责监听几个worker进程, 每个worker进程只有一个reactor线程监听(reactor_num &lt;= worker_num)。Swoole默认使用worker_process_id % reactor_num对worker进程进行分配, 交给对应的reactor线程进行监听</li>
 <li>reactor线程收到某个worker进程的数据后会进行处理, 值得注意的是, 这个reactor线程可能并不是发送请求的那个reactor线程。</li>
 </ul>
 <ol start="3">
@@ -519,26 +534,28 @@
 </li>
 </ol>
 <h2 id="3-2-请求处理"><a href="#3-2-请求处理" class="headerlink" title="3.2 请求处理"></a>3.2 请求处理</h2><ol>
-<li>master进程中的主线程负责监听端口(listen), 接受连接(accept, 产生一个fd), 接受连接后将请求分配给reactor线程, 默认通过fd % reactor_num进行分配, 之后通过epoll_ctl将fd加入到对应reactor线程中(如果对应的reactor线程正在执行epoll_wait, 主线程会阻塞), 刚加入时监听写事件, 如果直接监听读事件, 可能会立刻被触发, 而监听写事件可以允许reactor线程进行一些初始化操作<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//主线程执行epoll_ctl将fd(新接受的连接)加入到reactor线程的监听队列中</span><br><span class="line">epoll_ctl(epfd, fd, ...);</span><br><span class="line">//对应的reactor线程如果正在执行</span><br><span class="line">epoll_wait(epfd, ...);</span><br></pre></td></tr></table></figure>
-</li>
+<li>master进程中的主线程负责监听端口(<code>listen</code>), 接受连接(<code>accept</code>, 产生一个fd), 接受连接后将请求分配给reactor线程, 默认通过fd % reactor_number进行分配, 之后通过<code>epoll_ctl</code>将fd加入到对应reactor线程中, 刚加入时监听写事件, 因为新接受连接创建的套接字写缓冲区为空, 故而一定可写, 会被立刻触发, 进而reactor线程进行一些初始化操作</li>
 </ol>
 <ul>
-<li>这种情况主线程会被阻塞(两个线程同时操作epfd)</li>
-<li>如果reactor线程没有正在执行epoll_wait, 主线程则不会被阻塞, 执行成功后直接返回</li>
+<li>存在多个线程同时操作一个epollfd(通过系统调用<code>epoll_create</code>创建)的情况</li>
+<li>多个线程同时调用<code>epoll_ctl</code>是线程安全的(对应一个epollfd), 一个线程正在执行, 其他线程会被阻塞(因为需要同时操作epoll底层的红黑树)</li>
+<li>多个线程同时调用<code>epoll_wait</code>也是线程安全的, 但是一个事件可能会被多个线程同时接收到, 实际中不建议多个线程同时<code>epoll_wait</code>一个epollfd。Swoole中也是不存在这种情况的, Swoole中每个reactor线程都有自己的epollfd</li>
+<li>一个线程调用<code>epoll_wait</code>, 一个线程调用<code>epoll_ctl</code>, 根据man手册, 如果<code>epoll_ctl</code>新加入的fd已经准备好, 会使得执行<code>epoll_wait</code>的线程变成非阻塞状态(可以通过man <code>epoll_wait</code>查看相关内容)。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//主线程, 如果fd已经ready, reactor线程会被唤醒</span><br><span class="line">epoll_ctl(epollfd, fd, ...);</span><br><span class="line">//reactor线程</span><br><span class="line">epoll_wait(epollfd,...)</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
 <ol start="2">
-<li><p>reactor线程中fd的写事件被触发, reactor线程负责处理, 发现是首次加入, 没有数据可写, 则开启读事件监听</p>
+<li><p>reactor线程中fd的写事件被触发, reactor线程负责处理, 发现是首次加入, 没有数据可写, 则会开启读事件监听, 准备接受客户端发送的数据</p>
 </li>
-<li><p>reactor线程读取到用户的请求数据, <strong>一个请求的数据接收完后</strong>, 将数据转发给worker进程, 默认是通过fd % worker_num进行分配</p>
+<li><p>reactor线程读取到用户的请求数据, <strong>一个请求的数据接收完后</strong>, 将数据转发给worker进程, 默认是通过fd % worker_number进行分配</p>
 </li>
 </ol>
 <ul>
 <li>reactor发送给worker进程的数据包, 会包含一个头部, 头部中记录了reactor的信息</li>
-<li>如果发送的数据过大, 则需要将数据进行分片, 限于篇幅, reactor的分片, 后续再进行详细讲述</li>
-<li>可能存在多个reactor线程同时向同一个worker进程发送数据的情况, 故而swoole采用SOCK_DGRAM模式与worker进程进行通信, 通过每个数据包的包头, worker进程可以区分出是由哪个reactor线程发送的数据</li>
+<li>如果发送的数据过大, 则需要将数据进行分片, 限于篇幅, 数据分片, 后续再进行详细讲述</li>
+<li>可能存在多个reactor线程同时向同一个worker进程发送数据的情况, 故而Swoole采用SOCK_DGRAM模式与worker进程进行通信, 通过每个数据包的包头, worker进程可以区分出是由哪个reactor线程发送的数据, 也可以知道是哪个请求</li>
 </ul>
 <ol start="4">
-<li>worker进程收到reactor发送的数据包后, 进行处理, 处理完成后, 将数据发送给主进程</li>
+<li>worker进程收到reactor发送的数据包后, 进行处理, 处理完成后, 将请求结果发送给主进程</li>
 </ol>
 <ul>
 <li>worker进程发送给主进程的数据包, 也会包含一个头部, 当reactor线程收到数据包后, 能够知道对应的reactor线程, 请求的fd等信息</li>
@@ -547,11 +564,11 @@
 <li>主进程收到worker进程发送的数据包, 这个会触发某个reactor线程进行处理</li>
 </ol>
 <ul>
-<li>这个reactor线程并不一定是之前发送请求给worker进程的那个reactor线程</li>
+<li><strong>这个reactor线程并不一定是之前发送请求给worker进程的那个reactor线程</strong></li>
 <li>主进程的每个reactor线程都负责监听worker进程发送的数据包, 每个worker发送的数据包只会由一个reactor线程进行监听, 故而只会触发一个reactor线程</li>
 </ul>
 <ol start="6">
-<li>reactor线程处理worker进程发送的数据包, 如果是直接发送数据给客户端, 则可以直接发送, 如果需要改变这个这个连接的监听状态(例如close), 则需要先找到监听这个连接的reactor, 进而改变这个连接的监听状态</li>
+<li>reactor线程处理worker进程发送的请求处理结果, 如果是直接发送数据给客户端, 则可以直接发送, 如果需要改变这个这个连接的监听状态(例如<code>close</code>), 则需要先找到监听这个连接的reactor线程, 进而改变这个连接的监听状态(通过调用<code>epoll_ctl</code>)</li>
 </ol>
 <ul>
 <li>reactor处理线程与reactor监听线程可能并不是同一个线程</li>
@@ -560,9 +577,28 @@
 </ul>
 <h1 id="四-gdb调试"><a href="#四-gdb调试" class="headerlink" title="四. gdb调试"></a>四. gdb调试</h1><h2 id="4-1-process模式启动"><a href="#4-1-process模式启动" class="headerlink" title="4.1 process模式启动"></a>4.1 process模式启动</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">//fork manager进程</span><br><span class="line">#0  0x00007ffff67dae64 in fork () from /lib64/libc.so.6</span><br><span class="line">#1  0x00007ffff553888a in swoole_fork () at /root/code/swoole-src/src/core/base.c:186</span><br><span class="line">#2  0x00007ffff556afb8 in swManager_start (serv=serv@entry=0x1353f60) at /root/code/swoole-src/src/server/manager.cc:164</span><br><span class="line">#3  0x00007ffff5571dde in swFactoryProcess_start (factory=0x1353ff8) at /root/code/swoole-src/src/server/process.c:198</span><br><span class="line">#4  0x00007ffff556ef8b in swServer_start (serv=0x1353f60) at /root/code/swoole-src/src/server/master.cc:651</span><br><span class="line">#5  0x00007ffff55dc808 in zim_swoole_server_start (execute_data=&lt;optimized out&gt;, return_value=0x7fffffffac50)</span><br><span class="line">    at /root/code/swoole-src/swoole_server.cc:2946</span><br><span class="line">#6  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () at /root/php-7.3.3/Zend/zend_vm_execute.h:980</span><br><span class="line">#7  execute_ex (ex=0x7ffff7f850a8) at /root/php-7.3.3/Zend/zend_vm_execute.h:55485</span><br><span class="line">#8  0x00000000007bbf58 in zend_execute (op_array=op_array@entry=0x7ffff5e7b340, return_value=return_value@entry=0x7ffff5e1d030)</span><br><span class="line">    at /root/php-7.3.3/Zend/zend_vm_execute.h:60881</span><br><span class="line">#9  0x0000000000737554 in zend_execute_scripts (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,</span><br><span class="line">    file_count=file_count@entry=3) at /root/php-7.3.3/Zend/zend.c:1568</span><br><span class="line">#10 0x00000000006db4d0 in php_execute_script (primary_file=primary_file@entry=0x7fffffffd050) at /root/php-7.3.3/main/main.c:2630</span><br><span class="line">#11 0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:997</span><br><span class="line">#12 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:1389</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// pthread_create reactor线程</span><br><span class="line">#0  0x00007ffff552e960 in pthread_create@plt () from /usr/local/lib/php/extensions/no-debug-non-zts-20180731/swoole.so</span><br><span class="line">#1  0x00007ffff5576959 in swReactorThread_start (serv=0x1353f60) at /root/code/swoole-src/src/server/reactor_thread.c:883</span><br><span class="line">#2  0x00007ffff556f006 in swServer_start (serv=0x1353f60) at /root/code/swoole-src/src/server/master.cc:670</span><br><span class="line">#3  0x00007ffff55dc808 in zim_swoole_server_start (execute_data=&lt;optimized out&gt;, return_value=0x7fffffffac50)</span><br><span class="line">    at /root/code/swoole-src/swoole_server.cc:2946</span><br><span class="line">#4  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () at /root/php-7.3.3/Zend/zend_vm_execute.h:980</span><br><span class="line">#5  execute_ex (ex=0x7fffffffab10) at /root/php-7.3.3/Zend/zend_vm_execute.h:55485</span><br><span class="line">#6  0x00000000007bbf58 in zend_execute (op_array=op_array@entry=0x7ffff5e7b340, return_value=return_value@entry=0x7ffff5e1d030)</span><br><span class="line">    at /root/php-7.3.3/Zend/zend_vm_execute.h:60881</span><br><span class="line">#7  0x0000000000737554 in zend_execute_scripts (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,</span><br><span class="line">    file_count=file_count@entry=3) at /root/php-7.3.3/Zend/zend.c:1568</span><br><span class="line">#8  0x00000000006db4d0 in php_execute_script (primary_file=primary_file@entry=0x7fffffffd050) at /root/php-7.3.3/main/main.c:2630</span><br><span class="line">#9  0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:997</span><br><span class="line">#10 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:1389</span><br></pre></td></tr></table></figure>
 <h2 id="4-2-base模式启动"><a href="#4-2-base模式启动" class="headerlink" title="4.2 base模式启动"></a>4.2 base模式启动</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">//base 模式下的启动</span><br><span class="line">#0  0x00007ffff67dae64 in fork () from /lib64/libc.so.6</span><br><span class="line">#1  0x00007ffff553888a in swoole_fork () at /root/code/swoole-src/src/core/base.c:186</span><br><span class="line">#2  0x00007ffff5558557 in swProcessPool_spawn (pool=pool@entry=0x7ffff2d2a308, worker=0x7ffff2d2a778)</span><br><span class="line">    at /root/code/swoole-src/src/network/process_pool.c:392</span><br><span class="line">#3  0x00007ffff5558710 in swProcessPool_start (pool=0x7ffff2d2a308) at /root/code/swoole-src/src/network/process_pool.c:227</span><br><span class="line">#4  0x00007ffff55741cf in swReactorProcess_start (serv=0x1353f60) at /root/code/swoole-src/src/server/reactor_process.cc:176</span><br><span class="line">#5  0x00007ffff556f21d in swServer_start (serv=0x1353f60) at /root/code/swoole-src/src/server/master.cc:666</span><br><span class="line">#6  0x00007ffff55dc808 in zim_swoole_server_start (execute_data=&lt;optimized out&gt;, return_value=0x7fffffffac50)</span><br><span class="line">    at /root/code/swoole-src/swoole_server.cc:2946</span><br><span class="line">#7  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () at /root/php-7.3.3/Zend/zend_vm_execute.h:980</span><br><span class="line">#8  execute_ex (ex=0x7ffff2d2a308) at /root/php-7.3.3/Zend/zend_vm_execute.h:55485</span><br><span class="line">#9  0x00000000007bbf58 in zend_execute (op_array=op_array@entry=0x7ffff5e7b340, return_value=return_value@entry=0x7ffff5e1d030)</span><br><span class="line">    at /root/php-7.3.3/Zend/zend_vm_execute.h:60881</span><br><span class="line">#10 0x0000000000737554 in zend_execute_scripts (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,</span><br><span class="line">    file_count=file_count@entry=3) at /root/php-7.3.3/Zend/zend.c:1568</span><br><span class="line">#11 0x00000000006db4d0 in php_execute_script (primary_file=primary_file@entry=0x7fffffffd050) at /root/php-7.3.3/main/main.c:2630</span><br><span class="line">#12 0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:997</span><br><span class="line">#13 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:1389</span><br></pre></td></tr></table></figure>
-<h1 id="五-参考"><a href="#五-参考" class="headerlink" title="五. 参考"></a>五. 参考</h1><ul>
+<h1 id="五-总结及思考"><a href="#五-总结及思考" class="headerlink" title="五. 总结及思考"></a>五. 总结及思考</h1><ol>
+<li>本文主要介绍了Swoole server的两种模式: base模式、process模式, 详细讲解了两种模式的网络编程模型, 并重点介绍了process模式下, 进程间通信的方式、请求的处理流程等。</li>
+<li>process模式下, 为什么不直接在主进程中创建多个线程, 由线程直接进行处理请求(可以避免进程间通信的开销), 而是创建出manager进程, 再由manager进程创建出worker进程, 由worker进程处理请求?</li>
+</ol>
+<ul>
+<li>个人觉得可能是php对多线程的支持不是很友好, phper大都也只是进行单线程编程</li>
+<li>ZendVM 提供的 TSRM 虽然也是支持多线程环境，但实际上这是一个 按线程隔离内存的方案, 多线程并没有意义</li>
+</ul>
+<ol start="3">
+<li>process模式下, 主进程中的每个reactor线程都可以同时处理多个请求, 多个请求是并发处理的, 我们从2个维度看,</li>
+</ol>
+<ul>
+<li>从主进程的角度看, 主进程同时处理多个请求, 当一个请求包全部接收完后, 转发给worker进程进行处理</li>
+<li>从某个worker进程的角度看, 这个worker进程收到的请求是串行的, 默认情况下, worker进程也是串行处理请求, 如果单个请求阻塞(Swoole的worker进程会回调phper写的事件处理函数, 该函数可能阻塞), 后续的请求也无法处理, 这个就是排头阻塞问题, 这种情况下可以使用Swoole的协程, 通过协程的调度, 单个请求阻塞时, worker进程可以继续处理其他请求。</li>
+</ul>
+<ol start="4">
+<li>使用Swoole创建tcp server时, 由于tcp是字节流的协议, 需要分包, 而Swoole在不清楚客户端与服务端通信协议的情况下, 无法进行分包, process模式下, reactor交给worker进程的数据也只能是字节流的, 需要用户自行处理。当然, 一般情况也不需要自行构建协议, 使用tcp server, Swoole已经支持Http, Https等协议。</li>
+</ol>
+<h1 id="六-参考"><a href="#六-参考" class="headerlink" title="六. 参考"></a>六. 参考</h1><ul>
 <li>UNIX网络编程</li>
 <li>UNIX环境高级编程</li>
+<li>php7 底层实现与源码分析</li>
 <li><a href="https://wiki.swoole.com/" target="_blank" rel="noopener">https://wiki.swoole.com/</a></li>
 <li><a href="https://www.cnblogs.com/welhzh/p/3772164.html" target="_blank" rel="noopener">https://www.cnblogs.com/welhzh/p/3772164.html</a></li>
 <li><a href="https://www.cnblogs.com/JohnABC/p/4079669.html" target="_blank" rel="noopener">https://www.cnblogs.com/JohnABC/p/4079669.html</a></li>
@@ -789,7 +825,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一-基础知识"><span class="nav-text">一. 基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-swoole"><span class="nav-text">1.1 swoole</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-网络编程"><span class="nav-text">1.2 网络编程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-进程间通信"><span class="nav-text">1.3 进程间通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-socketpair"><span class="nav-text">1.4 socketpair</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-守护进程-daemon"><span class="nav-text">1.5 守护进程(daemon)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-swoole-tcp-server示例"><span class="nav-text">1.6 swoole tcp server示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二-swoole-server"><span class="nav-text">二. swoole server</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-base模式"><span class="nav-text">2.1 base模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-process模式"><span class="nav-text">2.2 process模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三-请求处理流程-process模式"><span class="nav-text">三. 请求处理流程(process模式)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-reactor线程与worker进程之间的通信"><span class="nav-text">3.1 reactor线程与worker进程之间的通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-请求处理"><span class="nav-text">3.2 请求处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#四-gdb调试"><span class="nav-text">四. gdb调试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-process模式启动"><span class="nav-text">4.1 process模式启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-base模式启动"><span class="nav-text">4.2 base模式启动</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#五-参考"><span class="nav-text">五. 参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一-基础知识"><span class="nav-text">一. 基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-Swoole"><span class="nav-text">1.1 Swoole</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-网络编程"><span class="nav-text">1.2 网络编程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-进程间通信"><span class="nav-text">1.3 进程间通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-socketpair"><span class="nav-text">1.4 socketpair</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-守护进程-daemon"><span class="nav-text">1.5 守护进程(daemon)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-swoole-tcp-server示例"><span class="nav-text">1.6 swoole tcp server示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二-swoole-server"><span class="nav-text">二. swoole server</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-base模式"><span class="nav-text">2.1 base模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-process模式"><span class="nav-text">2.2 process模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三-请求处理流程-process模式"><span class="nav-text">三. 请求处理流程(process模式)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-reactor线程与worker进程之间的通信"><span class="nav-text">3.1 reactor线程与worker进程之间的通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-请求处理"><span class="nav-text">3.2 请求处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#四-gdb调试"><span class="nav-text">四. gdb调试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-process模式启动"><span class="nav-text">4.1 process模式启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-base模式启动"><span class="nav-text">4.2 base模式启动</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#五-总结及思考"><span class="nav-text">五. 总结及思考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#六-参考"><span class="nav-text">六. 参考</span></a></li></ol></div>
             
 
           </div>

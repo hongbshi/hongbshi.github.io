@@ -1,5 +1,5 @@
 ---
-title: link_library_introduce
+title: 浅谈C/C++链接库
 date: 2019-08-28 16:34:08
 categories:
 - C/C++

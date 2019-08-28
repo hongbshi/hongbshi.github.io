@@ -45,6 +45,7 @@ int socketpair(int domain, int type, int protocol, int sv[2]);
 //protocol表示协议, SOCK_STREAM表示流协议(类似tcp), SOCK_DGRAM表示数据报协议(类似udp)
 //sv用于存储建立的套接字对, 也就是两个套接字文件描述符
 //成功返回0, 否则返回-1, 可以从errno获取错误信息
+
 ```
 - 调用成功后sv[0], sv[1]分别存储一个文件描述符
 - 向sv[0]中写入, 可以从sv[1]中读取
@@ -122,7 +123,7 @@ $serv->start();
 
 2. 启动过程
 - Swoole server启动入口: swServer_start函数,
-```
+```cpp
 //php 代码中$serv->start(); 会调用函数, 进行server start
 int swServer_start(swServer *serv);
 
@@ -134,7 +135,8 @@ if (serv->worker_num < serv->reactor_num)
     serv->reactor_num = serv->worker_num;
 }//也就是说reactor_num <= worker_num
 
-//之后执行factory start, 也就是swFactoryProcess_start函数, 该函数会fork出manager进程, manager进程进而fork出worker进程以及task_worker进程
+//之后执行factory start, 也就是swFactoryProcess_start函数
+//该函数会fork出manager进程, manager进程进而fork出worker进程以及task_worker进程
 if (factory->start(factory) < 0)
 {
     return SW_ERR;
@@ -149,6 +151,8 @@ else
 {
     ret = swReactorThread_start(serv);
 }
+
+
 ```
 - 如果设置了daemon模式, 在必要的参数检查完后, 先将自己变为守护进程再fork manager进程, 进而创建reactor线程
 
@@ -250,61 +254,103 @@ epoll_wait(epollfd,...)
 ```
 //fork manager进程
 #0  0x00007ffff67dae64 in fork () from /lib64/libc.so.6
-#1  0x00007ffff553888a in swoole_fork () at /root/code/swoole-src/src/core/base.c:186
-#2  0x00007ffff556afb8 in swManager_start (serv=serv@entry=0x1353f60) at /root/code/swoole-src/src/server/manager.cc:164
-#3  0x00007ffff5571dde in swFactoryProcess_start (factory=0x1353ff8) at /root/code/swoole-src/src/server/process.c:198
-#4  0x00007ffff556ef8b in swServer_start (serv=0x1353f60) at /root/code/swoole-src/src/server/master.cc:651
-#5  0x00007ffff55dc808 in zim_swoole_server_start (execute_data=<optimized out>, return_value=0x7fffffffac50)
+#1  0x00007ffff553888a in swoole_fork () 
+    at /root/code/swoole-src/src/core/base.c:186
+#2  0x00007ffff556afb8 in swManager_start (serv=serv@entry=0x1353f60) 
+    at /root/code/swoole-src/src/server/manager.cc:164
+#3  0x00007ffff5571dde in swFactoryProcess_start (factory=0x1353ff8) 
+    at /root/code/swoole-src/src/server/process.c:198
+#4  0x00007ffff556ef8b in swServer_start (serv=0x1353f60) 
+    at /root/code/swoole-src/src/server/master.cc:651
+#5  0x00007ffff55dc808 in zim_swoole_server_start 
+    (execute_data=<optimized out>, return_value=0x7fffffffac50)
     at /root/code/swoole-src/swoole_server.cc:2946
-#6  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () at /root/php-7.3.3/Zend/zend_vm_execute.h:980
-#7  execute_ex (ex=0x7ffff7f850a8) at /root/php-7.3.3/Zend/zend_vm_execute.h:55485
-#8  0x00000000007bbf58 in zend_execute (op_array=op_array@entry=0x7ffff5e7b340, return_value=return_value@entry=0x7ffff5e1d030)
+#6  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () 
+    at /root/php-7.3.3/Zend/zend_vm_execute.h:980
+#7  execute_ex (ex=0x7ffff7f850a8) 
+    at /root/php-7.3.3/Zend/zend_vm_execute.h:55485
+#8  0x00000000007bbf58 in zend_execute 
+    (op_array=op_array@entry=0x7ffff5e7b340, 
+    return_value=return_value@entry=0x7ffff5e1d030) 
     at /root/php-7.3.3/Zend/zend_vm_execute.h:60881
-#9  0x0000000000737554 in zend_execute_scripts (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,
+#9  0x0000000000737554 in zend_execute_scripts 
+    (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,
     file_count=file_count@entry=3) at /root/php-7.3.3/Zend/zend.c:1568
-#10 0x00000000006db4d0 in php_execute_script (primary_file=primary_file@entry=0x7fffffffd050) at /root/php-7.3.3/main/main.c:2630
-#11 0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:997
-#12 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:1389
-
+#10 0x00000000006db4d0 in php_execute_script 
+    (primary_file=primary_file@entry=0x7fffffffd050) 
+    at /root/php-7.3.3/main/main.c:2630
+#11 0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) 
+    at /root/php-7.3.3/sapi/cli/php_cli.c:997
+#12 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) 
+    at /root/php-7.3.3/sapi/cli/php_cli.c:1389
 
 // pthread_create reactor线程
-#0  0x00007ffff552e960 in pthread_create@plt () from /usr/local/lib/php/extensions/no-debug-non-zts-20180731/swoole.so
-#1  0x00007ffff5576959 in swReactorThread_start (serv=0x1353f60) at /root/code/swoole-src/src/server/reactor_thread.c:883
-#2  0x00007ffff556f006 in swServer_start (serv=0x1353f60) at /root/code/swoole-src/src/server/master.cc:670
-#3  0x00007ffff55dc808 in zim_swoole_server_start (execute_data=<optimized out>, return_value=0x7fffffffac50)
+#0  0x00007ffff552e960 in pthread_create@plt () 
+    from /usr/local/lib/php/extensions/no-debug-non-zts-20180731/swoole.so
+#1  0x00007ffff5576959 in swReactorThread_start (serv=0x1353f60) 
+    at /root/code/swoole-src/src/server/reactor_thread.c:883
+#2  0x00007ffff556f006 in swServer_start (serv=0x1353f60) 
+    at /root/code/swoole-src/src/server/master.cc:670
+#3  0x00007ffff55dc808 in zim_swoole_server_start 
+    (execute_data=<optimized out>, return_value=0x7fffffffac50)
     at /root/code/swoole-src/swoole_server.cc:2946
-#4  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () at /root/php-7.3.3/Zend/zend_vm_execute.h:980
+#4  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () 
+    at /root/php-7.3.3/Zend/zend_vm_execute.h:980
 #5  execute_ex (ex=0x7fffffffab10) at /root/php-7.3.3/Zend/zend_vm_execute.h:55485
-#6  0x00000000007bbf58 in zend_execute (op_array=op_array@entry=0x7ffff5e7b340, return_value=return_value@entry=0x7ffff5e1d030)
+#6  0x00000000007bbf58 in zend_execute 
+    (op_array=op_array@entry=0x7ffff5e7b340, 
+    return_value=return_value@entry=0x7ffff5e1d030)
     at /root/php-7.3.3/Zend/zend_vm_execute.h:60881
-#7  0x0000000000737554 in zend_execute_scripts (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,
+#7  0x0000000000737554 in zend_execute_scripts 
+    (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,
     file_count=file_count@entry=3) at /root/php-7.3.3/Zend/zend.c:1568
-#8  0x00000000006db4d0 in php_execute_script (primary_file=primary_file@entry=0x7fffffffd050) at /root/php-7.3.3/main/main.c:2630
-#9  0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:997
-#10 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:1389
+#8  0x00000000006db4d0 in php_execute_script 
+    (primary_file=primary_file@entry=0x7fffffffd050) 
+    at /root/php-7.3.3/main/main.c:2630
+#9  0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) 
+    at /root/php-7.3.3/sapi/cli/php_cli.c:997
+#10 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) 
+    at /root/php-7.3.3/sapi/cli/php_cli.c:1389
+
 ```
 
 ## 4.2 base模式启动
 ```
 //base 模式下的启动
 #0  0x00007ffff67dae64 in fork () from /lib64/libc.so.6
-#1  0x00007ffff553888a in swoole_fork () at /root/code/swoole-src/src/core/base.c:186
-#2  0x00007ffff5558557 in swProcessPool_spawn (pool=pool@entry=0x7ffff2d2a308, worker=0x7ffff2d2a778)
+#1  0x00007ffff553888a in swoole_fork () 
+    at /root/code/swoole-src/src/core/base.c:186
+#2  0x00007ffff5558557 in swProcessPool_spawn 
+    (pool=pool@entry=0x7ffff2d2a308, worker=0x7ffff2d2a778)
     at /root/code/swoole-src/src/network/process_pool.c:392
-#3  0x00007ffff5558710 in swProcessPool_start (pool=0x7ffff2d2a308) at /root/code/swoole-src/src/network/process_pool.c:227
-#4  0x00007ffff55741cf in swReactorProcess_start (serv=0x1353f60) at /root/code/swoole-src/src/server/reactor_process.cc:176
-#5  0x00007ffff556f21d in swServer_start (serv=0x1353f60) at /root/code/swoole-src/src/server/master.cc:666
-#6  0x00007ffff55dc808 in zim_swoole_server_start (execute_data=<optimized out>, return_value=0x7fffffffac50)
+#3  0x00007ffff5558710 in swProcessPool_start (pool=0x7ffff2d2a308) 
+    at /root/code/swoole-src/src/network/process_pool.c:227
+#4  0x00007ffff55741cf in swReactorProcess_start (serv=0x1353f60) 
+    at /root/code/swoole-src/src/server/reactor_process.cc:176
+#5  0x00007ffff556f21d in swServer_start (serv=0x1353f60) 
+    at /root/code/swoole-src/src/server/master.cc:666
+#6  0x00007ffff55dc808 in zim_swoole_server_start 
+    (execute_data=<optimized out>, return_value=0x7fffffffac50)
     at /root/code/swoole-src/swoole_server.cc:2946
-#7  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () at /root/php-7.3.3/Zend/zend_vm_execute.h:980
+#7  0x00000000007bb068 in ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HANDLER () 
+    at /root/php-7.3.3/Zend/zend_vm_execute.h:980
 #8  execute_ex (ex=0x7ffff2d2a308) at /root/php-7.3.3/Zend/zend_vm_execute.h:55485
-#9  0x00000000007bbf58 in zend_execute (op_array=op_array@entry=0x7ffff5e7b340, return_value=return_value@entry=0x7ffff5e1d030)
+#9  0x00000000007bbf58 in zend_execute 
+    (op_array=op_array@entry=0x7ffff5e7b340, 
+    return_value=return_value@entry=0x7ffff5e1d030)
     at /root/php-7.3.3/Zend/zend_vm_execute.h:60881
-#10 0x0000000000737554 in zend_execute_scripts (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,
+#10 0x0000000000737554 in zend_execute_scripts 
+    (type=type@entry=8, retval=0x7ffff5e1d030, retval@entry=0x0,
     file_count=file_count@entry=3) at /root/php-7.3.3/Zend/zend.c:1568
-#11 0x00000000006db4d0 in php_execute_script (primary_file=primary_file@entry=0x7fffffffd050) at /root/php-7.3.3/main/main.c:2630
-#12 0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:997
-#13 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) at /root/php-7.3.3/sapi/cli/php_cli.c:1389
+#11 0x00000000006db4d0 in php_execute_script 
+    (primary_file=primary_file@entry=0x7fffffffd050) 
+    at /root/php-7.3.3/main/main.c:2630
+#12 0x00000000007be2f5 in do_cli (argc=2, argv=0x1165cd0) 
+    at /root/php-7.3.3/sapi/cli/php_cli.c:997
+#13 0x000000000043fc1f in main (argc=2, argv=0x1165cd0) 
+    at /root/php-7.3.3/sapi/cli/php_cli.c:1389
+
+
 ```
 
 # 五. 总结及思考

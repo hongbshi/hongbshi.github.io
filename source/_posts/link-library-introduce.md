@@ -17,8 +17,14 @@ tags:
 
 
 ## 二. 编译链接
-1. 程序员写出的代码为.c或者.cpp, 这些文件需要经过: **编译、链接**才能生成可执行程序。
+1. 程序员写出的代码为.c或者.cpp, 这些文件需要经过: **预处理(处理代码中的include, 宏等)、编译(生成汇编代码)、汇编(将汇编代码生成二进制文件)、链接**才能生成可执行程序。**本文将预处理、编译、汇编的过程都看做是编译, 简化读者理解。更多细节可以参考相关资料**。
 2. 生成可执行文件后, 通过终端进行执行
+3. g++参数说明,
+- -std=`c++11`: 使用c++11标准
+- -o: 指定输出文件名称
+4. 链接器ld参数:
+- -L: 指定链接时搜索的动态链接库路径
+- -l: 链接某个库, 例如链接libmath.so, 写为-lmath
 
 
 ### 2.1 编译
@@ -70,7 +76,7 @@ int main(int argc, char **argv){
 4. 生成可执行文件
 - 编译math.cpp: g++ -std=c++11 -c math.cpp, 生成math.o
 - 编译main.cpp: g++ -std=c++11 -c main.cpp, 生成main.o
-- 生成可以执行的文件: g++ -v math.o main.o -o main, 可以看到g++的链接过程
+- 生成可以执行的文件: g++ -v math.o main.o -o main, 可以看到g++的编译链接过程
 
 ```
 Using built-in specs.
@@ -339,12 +345,19 @@ g++ -std=c++11 main.cpp -L. -lsecond -o main
 - 虽然**lib1**动态链接了**libbase**, 但是动态链接真正进行符号解析是在程序执行阶段, 编译阶段无法获取**libbase**的相关信息, 应用程序中如果也使用了**libbase**中的函数, 则必须链接**libbase**, 否则会出现符号未定义
 - 如果**lib1**静态链接了**libbase**, 也就是说包含了**libbase**中的函数, 则应用程序不需要在链接**libbase**
 
-3. 讨论
+3. 菱形依赖问题, A依赖于B以及C, B、C都依赖于D, 但是是不同版本, 例如B依赖于D1, C依赖于D2, 这种情况下如何链接?
+- D2兼容于D1(ABI层面兼容), 程序直接链接D2
+- D2不兼容于D1, 查看B是否可以依赖D2重新编译
+- 链接器的参数, 直接链接两个版本。ld的参数--default-symver或者--version-script
+
+4. 讨论
 - 动态链接会有大量的依赖问题(windows dll hell)
-- rust, go等语言都开始采用静态的方式, 解决依赖问题
+- 由于采用模块化, 又允许升级单个模块, 菱形依赖问题对于很多语言都是存在的
+- rust, go等语言都开始采用源码编译的方式, 解决依赖问题
 
 
 ## 九. 参考
 - http://blog.chinaunix.net/uid-26548237-id-3837099.html
 - https://www.cnblogs.com/fnlingnzb-learner/p/8119729.html
 - https://blog.csdn.net/coolwaterld/article/details/85088288
+- https://blog.habets.se/2012/05/Shared-libraries-diamond-problem.html

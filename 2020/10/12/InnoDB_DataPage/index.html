@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Mysql,InnoDB,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一. 简介 Mysql是目前最为流行的关系型数据库管理系统, 具有体积小、速度快、开放源码等优势。InnoDB是Mysql使用最广泛的存储引擎, InnoDB进行了行锁设计, 支持MVCC, 提供一致性非锁定读。学习InnoDB数据页存储, 能够让我们更加深入的理解InnoDB的一些特性。 程序 = 数据结构 + 算法, 对于Mysql而言也是如此。由于数据持久化的需要, Mysql的数据不仅存储">
+<meta name="keywords" content="Mysql,InnoDB">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB数据页存储">
+<meta property="og:url" content="http://yoursite.com/2020/10/12/InnoDB_DataPage/index.html">
+<meta property="og:site_name" content="随园">
+<meta property="og:description" content="一. 简介 Mysql是目前最为流行的关系型数据库管理系统, 具有体积小、速度快、开放源码等优势。InnoDB是Mysql使用最广泛的存储引擎, InnoDB进行了行锁设计, 支持MVCC, 提供一致性非锁定读。学习InnoDB数据页存储, 能够让我们更加深入的理解InnoDB的一些特性。 程序 = 数据结构 + 算法, 对于Mysql而言也是如此。由于数据持久化的需要, Mysql的数据不仅存储">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/Mysql%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E9%A1%B5%E5%AD%98%E5%82%A8.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E9%A1%B5%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/compact%E8%A1%8C%E8%AE%B0%E5%BD%95%E6%A0%BC%E5%BC%8F.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/B%2B%E6%A0%91%E7%A4%BA%E4%BE%8B.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%AD%98%E5%82%A8%E7%A4%BA%E4%BE%8B1.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%AD%98%E5%82%A8%E7%A4%BA%E4%BE%8B2.jpg">
+<meta property="og:updated_time" content="2020-10-12T02:09:48.099Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="InnoDB数据页存储">
+<meta name="twitter:description" content="一. 简介 Mysql是目前最为流行的关系型数据库管理系统, 具有体积小、速度快、开放源码等优势。InnoDB是Mysql使用最广泛的存储引擎, InnoDB进行了行锁设计, 支持MVCC, 提供一致性非锁定读。学习InnoDB数据页存储, 能够让我们更加深入的理解InnoDB的一些特性。 程序 = 数据结构 + 算法, 对于Mysql而言也是如此。由于数据持久化的需要, Mysql的数据不仅存储">
+<meta name="twitter:image" content="https://picturestore.nos-eastchina1.126.net/mysql/Mysql%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/10/12/InnoDB_DataPage/">
+
+
+
+
+
+  <title>InnoDB数据页存储 | 随园</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">随园</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/10/12/InnoDB_DataPage/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="hongbshi">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随园">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">InnoDB数据页存储</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-10-12T10:06:37+08:00">
+                2020-10-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">Mysql</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2020/10/12/InnoDB_DataPage/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/10/12/InnoDB_DataPage/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2020/10/12/InnoDB_DataPage/" class="leancloud_visitors" data-flag-title="InnoDB数据页存储">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">Visitors&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="一-简介"><a href="#一-简介" class="headerlink" title="一. 简介"></a>一. 简介</h2><ol>
+<li>Mysql是目前最为流行的关系型数据库管理系统, 具有体积小、速度快、开放源码等优势。InnoDB是Mysql使用最广泛的存储引擎, InnoDB进行了行锁设计, 支持MVCC, 提供一致性非锁定读。学习InnoDB数据页存储, 能够让我们更加深入的理解InnoDB的一些特性。</li>
+<li>程序 = 数据结构 + 算法, 对于Mysql而言也是如此。由于数据持久化的需要, Mysql的数据不仅存储在内存中, 也会持久化到文件中, 存储结构如下图,<br><img src="https://picturestore.nos-eastchina1.126.net/mysql/Mysql%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0.jpg" alt="image"></li>
+</ol>
+<ul>
+<li>从磁盘中, 我们可以很容易的看到持久化的各个文件。</li>
+<li>磁盘中的文件需要加载到内存中才能被程序使用, 很明显, 不可能将所有磁盘文件都加载到内存, 当内存中的数据发生更改后, 也需要刷新到磁盘文件中, 什么时候刷新, 怎么刷新, 这些都是Mysql需要考虑的问题, 但是这些内容不是本文的重点, 我们这里稍加了解即可。</li>
+<li><strong>本文的重点是学习数据页的存储, 这些数据页可能存在与系统表空间, 独立表空间或者临时表空间。可以看到, 这些只是图中的一小部分。</strong></li>
+</ul>
+<ol start="3">
+<li>学习之前, 我们先考虑几个问题,</li>
+</ol>
+<ul>
+<li>无论是内存存储还是磁盘存储, 都离不开内存管理, InnoDB是如何划分内存以及如何管理内存的?</li>
+<li>InnoDB使用B+树存储我们表中的数据, B+树索引节点以及叶子节点应该需要存储哪些数据? 又是怎么存储的?</li>
+<li>我们在使用时, 创建了数据库, 数据表, 这些元数据是如何存储的, 查询某个表时, 如何根据元数据找到表的索引, 如何选择索引, 选择索引后, 如何定位到索引的根节点(root page)? 找到跟节点后, 又是如何一步步找到某个具体数据的?</li>
+</ul>
+<ol start="4">
+<li>说明</li>
+</ol>
+<ul>
+<li>Mysql版本: 8.0.12-debug</li>
+<li>存储引擎使用InnoDB</li>
+<li>我们会用到xxd命令, 使用xxd(或者hexdump)可以以十六进制的方式查看文件。</li>
+</ul>
+<h2 id="二-InnoDB存储结构"><a href="#二-InnoDB存储结构" class="headerlink" title="二. InnoDB存储结构"></a>二. InnoDB存储结构</h2><p>InnoDB存储结构图如下所示, 我们这里只做简要的介绍, 更多细节我们将在后续的文章中再进行详细阐述,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="image"></p>
+<ol>
+<li>表空间(tablespace)可以认为是InnoDB存储引擎存储结构的最高层, 所有数据都在表空间中, 除了共享表空间外, 每个表可以创建独立表空间, 具体参数是由innodb_file_per_table参数决定, 表空间由各种段组成。</li>
+<li>常见的段(segment)有数据段, 回滚段, 索引段。innodb中数据段就是B+树的叶子节点, 索引段就是B+树中的非叶子节点。</li>
+<li>段是由区(extent)组成, 默认情况下区的大小是1MB, InnoDB默认页大小为16KB, 所以1个区是由16个连续页组成。</li>
+<li>innodb默认页(page)大小是16KB, 也可以通过innodb_page_size进行控制。</li>
+<li>innodb存储是面向行(row)的, 行的存储格式主要有compact、redundant、compressed、dynamic。</li>
+</ol>
+<h2 id="三-数据页存储"><a href="#三-数据页存储" class="headerlink" title="三. 数据页存储"></a>三. 数据页存储</h2><h3 id="3-1-独立表空间"><a href="#3-1-独立表空间" class="headerlink" title="3.1 独立表空间"></a>3.1 独立表空间</h3><p>通过innodb_file_per_table参数, 我们可以为每个表都创建一个表空间, 这个就是这个表的独立表空间, 这个表的索引段, 数据段都会存储在这个独立表空间中, 但是Redo log, Undo log仍然在各自的表空间中, 表空间存储如下图,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%BB%93%E6%9E%84.jpg" alt="image"></p>
+<ol>
+<li>表空间的page 0是表空间的第一页, 存储了表空间的信息， 同时也用于管理前256个extent。page 16384类型为FIL_PAGE_TYPE_XDES也用于管理之后的256个extent, 以此类推, 每隔16384个页面都会需要一个FIL_PAGE_TYPE_XDES页面。</li>
+<li>page 1类型是FIL_PAGE_IBUF_BITMAP, 用于管理每个page(前256个extent的16384个页面)的change buffer(change buffer相关内容不是本文的重点, 感兴趣的读者可以查找相关资料)。与FIL_PAGE_TYPE_XDES类似, 每隔16384个页面都需要一个FIL_PAGE_IBUF_BITMAP页面。</li>
+<li>page 2类型为FIL_PAGE_INODE, 用于管理segment。</li>
+<li>page 3类型为FIL_PAGE_SDI, 存储Serialized Dictionary Information(SDI, 词典序列化信息), 存储了这个表空间的一些数据字典(Data Dictionary)信息。</li>
+<li>page 4一般就是这个表主键索引的root page。</li>
+</ol>
+<h3 id="3-2-页存储"><a href="#3-2-页存储" class="headerlink" title="3.2 页存储"></a>3.2 页存储</h3><p>InnoDB的页存储结构如下, 每页都是由3部分组成, File Header(38字节)、File Body、File Trailer(8字节), 不同页的File Body存储的内容不同,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E9%A1%B5%E5%AD%98%E5%82%A8.jpg" alt="image"></p>
+<ol>
+<li>File Header</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FIL_PAGE_SPACE_OR_CHKSUM</td>
+<td>4字节</td>
+<td>页的校验码</td>
+</tr>
+<tr>
+<td>FIL_PAGE_OFFSET</td>
+<td>4字节</td>
+<td>表空间中页的便宜量</td>
+</tr>
+<tr>
+<td>FIL_PAGE_PREV</td>
+<td>4字节</td>
+<td>上一页</td>
+</tr>
+<tr>
+<td>FIL_PAGE_NEXT</td>
+<td>4字节</td>
+<td>下一页</td>
+</tr>
+<tr>
+<td>FIL_PAGE_LSN</td>
+<td>8字节</td>
+<td>页面被最后修改时对应的日志序列位置</td>
+</tr>
+<tr>
+<td>FIL_PAGE_TYPE</td>
+<td>2字节</td>
+<td>页面类型</td>
+</tr>
+<tr>
+<td>FIL_PAGE_FILE_FLUSH_LSN</td>
+<td>8字节</td>
+<td>系统表空间中有定义, 代表文件更新到的LSN</td>
+</tr>
+<tr>
+<td>FIL_PAGE_ARCH_LOG_NO_OR_SPACE_ID</td>
+<td>4字节</td>
+<td>页面所属表空间id</td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li>File Type</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FIL_PAGE_TYPE_ALLOCATED</td>
+<td>0x0000</td>
+<td>未使用</td>
+</tr>
+<tr>
+<td>FIL_PAGE_UNDO_LOG</td>
+<td>0x0002</td>
+<td>undo log</td>
+</tr>
+<tr>
+<td>FIL_PAGE_INODE</td>
+<td>0x0003</td>
+<td>存储了段信息</td>
+</tr>
+<tr>
+<td>FIL_PAGE_IBUF_FREE_LIST</td>
+<td>0x0004</td>
+<td>Insert Buffer空闲列表</td>
+</tr>
+<tr>
+<td>FIL_PAGE_IBUF_BITMAP</td>
+<td>0x0005</td>
+<td>Insert Buffer位图</td>
+</tr>
+<tr>
+<td>FIL_PAGE_TYPE_SYS</td>
+<td>0x0006</td>
+<td>系统页</td>
+</tr>
+<tr>
+<td>FIL_PAGE_TYPE_TRX_SYS</td>
+<td>0x0007</td>
+<td>事务系统数据</td>
+</tr>
+<tr>
+<td>FIL_PAGE_TYPE_FSP_HDR</td>
+<td>0x0008</td>
+<td>表空间头部信息</td>
+</tr>
+<tr>
+<td>FIL_PAGE_TYPE_XDES</td>
+<td>0x0009</td>
+<td>扩展描述页</td>
+</tr>
+<tr>
+<td>FIL_PAGE_TYPE_BLOB</td>
+<td>0x000A</td>
+<td>BLOB页</td>
+</tr>
+<tr>
+<td>FIL_PAGE_SDI</td>
+<td>0x45bd</td>
+<td>SDI索引页</td>
+</tr>
+<tr>
+<td>FIL_PAGE_RTREE</td>
+<td>0x45be</td>
+<td>R-tree</td>
+</tr>
+<tr>
+<td>FIL_PAGE_INDEX</td>
+<td>0x45bf</td>
+<td>B-tree</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-3-数据页"><a href="#3-3-数据页" class="headerlink" title="3.3 数据页"></a>3.3 数据页</h3><p>看完InnoDB页结构后, 我们看下数据页的存储,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E9%A1%B5%E7%BB%93%E6%9E%84.jpg" alt="image"></p>
+<ol>
+<li>Page Header</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PAGE_N_DIR_SLOTS</td>
+<td>2字节</td>
+<td>page directory中slot的个数</td>
+</tr>
+<tr>
+<td>PAGE_HEAP_TOP</td>
+<td>2字节</td>
+<td>堆中第一个记录指针</td>
+</tr>
+<tr>
+<td>PAGE_N_HEAP</td>
+<td>2字节</td>
+<td>堆中记录数</td>
+</tr>
+<tr>
+<td>PAGE_FREE</td>
+<td>2字节</td>
+<td>指向空闲空间首地址</td>
+</tr>
+<tr>
+<td>PAGE_GARBAGE</td>
+<td>2字节</td>
+<td>已经删除的记录数</td>
+</tr>
+<tr>
+<td>PAGE_LAST_INSERT</td>
+<td>2字节</td>
+<td>最后插入位置</td>
+</tr>
+<tr>
+<td>PAGE_DIRECTION</td>
+<td>2字节</td>
+<td>最后插入方向</td>
+</tr>
+<tr>
+<td>PAGE_N_DIRECTION</td>
+<td>2字节</td>
+<td>一个插入方向连续插入记录数</td>
+</tr>
+<tr>
+<td>PAGE_N_RECS</td>
+<td>2字节</td>
+<td>这个页的记录总数</td>
+</tr>
+<tr>
+<td>PAGE_MAX_TRX_ID</td>
+<td>8字节</td>
+<td>修改当前页的最大事务ID</td>
+</tr>
+<tr>
+<td>PAGE_LEVEL</td>
+<td>2字节</td>
+<td>当前页在索引中的层, 叶子节点为0x00</td>
+</tr>
+<tr>
+<td>PAGE_INDEX_ID</td>
+<td>8字节</td>
+<td>索引ID</td>
+</tr>
+<tr>
+<td>PAGE_BTR_SEG_LEAF</td>
+<td>10字节</td>
+<td>非叶子节点所在段, 仅在B+树的root页中有定义</td>
+</tr>
+<tr>
+<td>PAGE_BTR_SEG_TOP</td>
+<td>10字节</td>
+<td>数据页所在段, 仅在B+树的root页中有定义</td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li>Infimun &amp; Supermum<br>虚拟记录, Infimum为13字节, Supermum也是13字节。具体存储内容, 我们会在下面进行介绍。</li>
+</ol>
+<ol start="3">
+<li>Page Directory</li>
+</ol>
+<ul>
+<li>页目录, 因为行记录在数据页中以链表的形式链接, 但是在查找记录时, 链表查找速度很慢, 为了加速记录查找, 创建页目录, 页目录可以用于二分查找。<strong>每个目录项占用2个字节, 从页尾部开始, 倒序存储。</strong></li>
+<li>为了便于理解Page Directory, 我们这里举一个例子, 如果表中存储了200条数据, 数据通过链表的方式进行链接, 我们在查询时, 需要遍历整个链表才能找到数据, 这样无疑比较慢。我们可以通过建立索引的方式, 加快查找速度, 我们可以将这200条记录的主键按照顺序进行存储, InnoDB的Page Directory就是这个思路, 但是并不是存储了主键的值, 而是存储了对应记录的位置, 并且不是将每个行记录都存储在Page Directory中, 只是建立一个稀疏索引。</li>
+</ul>
+<h3 id="3-4-innodb行存储"><a href="#3-4-innodb行存储" class="headerlink" title="3.4 innodb行存储"></a>3.4 innodb行存储</h3><p>限于篇幅, 我们这里主要介绍compact格式的行记录存储, 存储格式如下图,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/compact%E8%A1%8C%E8%AE%B0%E5%BD%95%E6%A0%BC%E5%BC%8F.jpg" alt="image"></p>
+<ol>
+<li>从图中可以看出, 每个记录行至少占有5字节(记录头) + 主键长度 + 6字节(事务ID) + 7字节(回滚指针)</li>
+<li>我们需要注意记录头中的next_record字段, 这个字段占有16bit, 也就是2个字节, 通过这个字段, InnoDB将一个页中的所有记录以链表的方式链接到一起。</li>
+</ol>
+<h2 id="四-实例讲解"><a href="#四-实例讲解" class="headerlink" title="四. 实例讲解"></a>四. 实例讲解</h2><p>为了便于大家理解, 这部分我们给出一些实例,</p>
+<ol>
+<li>本节举例说明InnoDB的一个表是如何存储的, 主要介绍两种情况, 一种情况是表中数据很少, 另一种情况是表中数据比较多, 一页已经存储不了的情况。</li>
+<li>表结构定义,<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> <span class="string">`t`</span> (<span class="string">`id`</span> <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span>, primary <span class="keyword">key</span>(<span class="string">`id`</span>)) <span class="keyword">engine</span>=<span class="keyword">InnoDB</span> ROW_FORMAT=<span class="keyword">Compact</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>为了更容易理解, 我们这里只创建了一个非常简单的表, 也只有一个主键索引。主键类型为int, 占用4个字节。</li>
+<li>创建表后, 可以在相应的目录下看到t.ibd文件, 这里我是在test数据库下创建的这个表, 所以也就在test目录下。</li>
+<li>从磁盘文件中, 我们可以看到, t.ibd文件大小为112KB, 也就是7*16KB, 也就是7个page, 也就意味着, 创建表后, InnoDB默认初始化了7个page。</li>
+<li>我们的表中没有变长字段, 主键长度为4字节, 所以单个记录的长度为5(记录头) + 4(主键ID) + 6(事务ID) + 7(回滚指针) = 22字节</li>
+</ul>
+<ol start="3">
+<li>B+树示例<br>InnoDB数据存储是通过B+树组织的, 一个很简单的B+树如下所示,</li>
+</ol>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/B%2B%E6%A0%91%E7%A4%BA%E4%BE%8B.jpg" alt="image"></p>
+<ul>
+<li>B+树的性质有很多, 其增删查改操作较常规的二叉树更复杂一些,  感兴趣的可以查询相关资料, 这里有个基本概念即可。</li>
+</ul>
+<ol start="4">
+<li>后续如果没有特殊说明, 表空间第一个页是page 0, 第二页是page 1, 以此类推。</li>
+</ol>
+<h3 id="4-1-单页存储"><a href="#4-1-单页存储" class="headerlink" title="4.1 单页存储"></a>4.1 单页存储</h3><p>我们首先看下当表中数据很少的时候, 数据是如何组织的, 具体操作步骤如下,</p>
+<ol>
+<li>我们向表中插入2条记录,<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span> (<span class="number">2</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t <span class="keyword">values</span> (<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>这里注意我们先插入主键值为2的行记录, 再插入主键值为1的行记录。</li>
+</ul>
+<ol start="2">
+<li><p>通过xxd将t.ibd以16进制表示, 执行命令xxd t.idb t.txt, 也可以使用hexdump命令查看。</p>
+</li>
+<li><p>查看t.txt中的内容, 这里我们查看<strong>page 4</strong>的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">0010000: a76e 6043 0000 0004 ffff ffff ffff ffff  .n`C............</span><br><span class="line">0010010: 0000 0000 012e 6d9d 45bf 0000 0000 0000  ......m.E.......</span><br><span class="line">0010020: 0000 0000 0005 0002 00a4 8004 0000 0000  ................</span><br><span class="line">0010030: 0093 0001 0001 0002 0000 0000 0000 0000  ................</span><br><span class="line">0010040: 0000 0000 0000 0000 0091 0000 0005 0000  ................</span><br><span class="line">0010050: 0002 0272 0000 0005 0000 0002 01b2 0100  ...r............</span><br><span class="line">0010060: 0200 3069 6e66 696d 756d 0003 000b 0000  ..0infimum......</span><br><span class="line">0010070: 7375 7072 656d 756d 0000 10ff f380 0000  supremum........</span><br><span class="line">0010080: 0200 0000 001c 0481 0000 00fa 0110 0000  ................</span><br><span class="line">0010090: 18ff ea80 0000 0100 0000 001c 0582 0000  ................</span><br><span class="line">00100a0: 012c 0110 0000 0000 0000 0000 0000 0000  .,..............</span><br><span class="line">00100b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span><br><span class="line">......</span><br><span class="line">......</span><br><span class="line">0013fe0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span><br><span class="line">0013ff0: 0000 0000 0070 0063 a76e 6043 012e 6d9d  .....p.c.n`C..m.</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>前38字节是文件头[0010000,0010026]</li>
+<li>之后56字节是数据页头部[0010027,001005d]</li>
+<li>之后的26字节是最小记录[001005e, 001006a], 最大记录[001006b, 0010077], 这里可以看到最小记录的n_owns值为1(只有自身1条记录), 最大记录的n_owns值为3(除了自身外, 还有我们插入的两条记录)</li>
+<li><p>紧接着是第1条插入记录[0010078, 001008d]</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0010070: .... .... .... .... 0000 10ff f380 0000</span><br><span class="line">0010080: 0200 0000 001c 0481 0000 00fa 0110 ....</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>最后是刚才插入的第2条记录[001008e, 00100a3]</p>
+</li>
+<li>对于int类型, innodb存储方式与常规的方式不同, [0x00000000, 0x7fffffff]代表[-2147483648, -1], [0x80000000, 0xffffffff]代表[0, 21473647]。</li>
+</ul>
+<ol start="4">
+<li><p>存储结构如下图<br><img src="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%AD%98%E5%82%A8%E7%A4%BA%E4%BE%8B1.jpg" alt="image"></p>
+</li>
+<li><p>这里示例下如何从最小记录查找到最大记录</p>
+</li>
+</ol>
+<ul>
+<li>首先定位到最小记录的位置, 最小记录占有5字节(记录头) + 8字节(内容) = 13字节, 最小记录所在的位置为001005e, 根据最小记录的记录头信息, 可以计算出下一个记录所在位置001005e + 0030 = 001008e</li>
+<li>001008e是主键为1的记录所在位置, 接着计算下一个记录的位置001008e + ffea = 0010078, 这里需要注意的是, 加法运算时, 只保留后面4位的结果, 可以看到这个位置就是我们第一次插入的主键为2的记录</li>
+<li>之后, 继续计算下一个记录所在位置, 0010078 + fff3 = 1006b, 这个就是最大记录所在的位置</li>
+<li>在查找某个具体的行记录时, 可以先利用page directory进行近似的二分查找, 之后再进行链表查找。</li>
+</ul>
+<ol start="6">
+<li>page directory</li>
+</ol>
+<ul>
+<li><p>页尾部包含两个slots</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0013ff0: 0000 0000 0070 0063 .... .... .... ....</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>0063是第1个slot的位置, 相应的记录所在位置为0010063, 也就是最小记录。[001005e, 0010062]这个是最小记录的记录头, [0010063, 001006a]是最小记录的内容。</p>
+</li>
+<li>0070是第2个slot的位置, 相应的记录所在位置为0010070, 这个是最大记录所在的内容开始位置。</li>
+</ul>
+<ol start="7">
+<li>小结</li>
+</ol>
+<ul>
+<li>可以看到, 从最小记录开始, 到最大记录结束, 数据按照主键顺序以链表的方式进行链接。</li>
+<li>行数据的存储是按照插入的顺序存储的, 不是按照主键顺序存储, 数据删除后, 释放的空间可以复用, 关于复用部分的细节, 后续文章再进行详细介绍。</li>
+</ul>
+<h3 id="4-2-多页存储"><a href="#4-2-多页存储" class="headerlink" title="4.2 多页存储"></a>4.2 多页存储</h3><p>在4.1的基础上, 我们继续插入数据, 操作步骤如下,</p>
+<ol>
+<li>我们通过脚本向表中继续插入数据<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$servername = <span class="string">"localhost:8083"</span>;</span><br><span class="line">$username = <span class="string">"root"</span>;</span><br><span class="line">$password = <span class="string">"password"</span>;</span><br><span class="line">$dbname = <span class="string">"test"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    $conn = <span class="keyword">new</span> PDO(<span class="string">"mysql:host=$servername;dbname=$dbname"</span>, $username, $password);</span><br><span class="line">    $conn-&gt;setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);</span><br><span class="line">    <span class="keyword">for</span>($i = <span class="number">3</span>; $i &lt; <span class="number">1000</span>; $i++)&#123;</span><br><span class="line">    	$sql = <span class="string">"INSERT INTO t VALUES ("</span> . strval($i) . <span class="string">")"</span>;</span><br><span class="line">        $conn-&gt;exec($sql);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">catch</span>(PDOException $e)&#123;</span><br><span class="line">    <span class="keyword">echo</span> $sql . <span class="string">"&lt;br&gt;"</span> . $e-&gt;getMessage();</span><br><span class="line">&#125;</span><br><span class="line">$conn = <span class="keyword">null</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>之前表中已经插入2条记录, 这里又插入997条记录, 所以表中现在一共999条记录, 主键id从1到999。</li>
+<li>单条记录需要占用22字节, 可以知道, 此时, 单个数据页不能存储全部数据。</li>
+</ul>
+<ol start="2">
+<li>以16进制查看此时的t.ibd文件: xxd t.ibd t.txt</li>
+<li>查看t.txt内容, 首先查看<strong>page 4</strong>的内容<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">0010000: df67 193d 0000 0004 ffff ffff ffff ffff  .g.=............</span><br><span class="line">0010010: 0000 0000 0132 5500 45bf 0000 0000 0000  .....2U.E.......</span><br><span class="line">0010020: 0000 0000 0005 0002 0092 8004 0000 0000  ................</span><br><span class="line">0010030: 008a 0002 0001 0002 0000 0000 0000 0000  ................</span><br><span class="line">0010040: 0001 0000 0000 0000 0091 0000 0005 0000  ................</span><br><span class="line">0010050: 0002 0272 0000 0005 0000 0002 01b2 0100  ...r............</span><br><span class="line">0010060: 0200 1a69 6e66 696d 756d 0003 000b 0000  ...infimum......</span><br><span class="line">0010070: 7375 7072 656d 756d 1000 1100 0d80 0000  supremum........</span><br><span class="line">0010080: 0100 0000 0500 0019 ffe6 8000 0153 0000  .............S..</span><br><span class="line">0010090: 0006 0000 0000 0000 0000 0000 0000 0000  ................</span><br><span class="line">.......</span><br><span class="line">.......</span><br><span class="line">0013fe0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span><br><span class="line">0013ff0: 0000 0000 0070 0063 df67 193d 0132 5500  .....p.c.g.=.2U.</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>可以看到, 第5页, 目前只有少量内容, 因为此时第5页是索引页, 是B+树的根, 没有存储具体的数据, 只存储了主键索引。</li>
+<li>File Header, Page Header, Infimum &amp; Supremum跟之前基本类似, 这里就不再详细介绍。</li>
+<li>单个索引需要占用5字节(记录头) + 4字节(主键) + 4字节(记录所在页) = 13字节。</li>
+<li>第1个索引信息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0010070: .... .... .... .... 1000 1100 0d80 0000</span><br><span class="line">0010080: 0100 0000 05.. .... .... .... .... ....</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>主键id为0x80000001, 也就是1, page no为0x00000005, 也就是<strong>page 5</strong></p>
+<ul>
+<li>第2个索引信息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0010080: .... .... ..00 0019 ffe6 8000 0153 0000</span><br><span class="line">0010090: 0006 .... .... .... .... .... .... ....</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>主键id为0x80000153, 也就是339, page no为0x00000006, 也就是<strong>page 6</strong></p>
+<ul>
+<li>通过这两个索引信息, 可以知道, <strong>page 5</strong>存储着主键id从1到338的数据, <strong>page 6</strong>存储着主键id从339到999的数据</li>
+</ul>
+<ol start="4">
+<li>查看<strong>page 5</strong><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">0014000: e1c0 bb7a 0000 0005 ffff ffff 0000 0006  ...z............</span><br><span class="line">0014010: 0000 0000 0132 5500 45bf 0000 0000 0000  .....2U.E.......</span><br><span class="line">0014020: 0000 0000 0005 0056 3a90 82a6 1d89 1d0c  .......V:.......</span><br><span class="line">0014030: 0000 0005 0000 0152 0000 0000 0000 0000  .......R........</span><br><span class="line">0014040: 0000 0000 0000 0000 0091 0000 0000 0000  ................</span><br><span class="line">0014050: 0000 0000 0000 0000 0000 0000 0000 0100  ................</span><br><span class="line">0014060: 0200 1a69 6e66 696d 756d 0003 000b 0000  ...infimum......</span><br><span class="line">0014070: 7375 7072 656d 756d 0000 1000 1680 0000  supremum........</span><br><span class="line">0014080: 0100 0000 001c 0582 0000 012c 0110 0000  ...........,....</span><br><span class="line">0014090: 1800 1680 0000 0200 0000 001c 0481 0000  ................</span><br><span class="line">00140a0: 00fa 0110 0000 2000 1680 0000 0300 0000  ...... .........</span><br><span class="line">.......</span><br><span class="line">.......</span><br><span class="line">0017e90: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span><br><span class="line">0017ea0: 0000 0000 0070 3a27 39cf 3977 391f 38c7  .....p:&apos;9.9w9.8.</span><br><span class="line">0017eb0: 386f 3817 37bf 3767 370f 36b7 365f 3607  8o8.7.7g7.6.6_6.</span><br><span class="line">0017ec0: 35af 3557 34ff 34a7 344f 33f7 339f 3347  5.5W4.4.4O3.3.3G</span><br><span class="line">0017ed0: 32ef 3297 323f 31e7 318f 3137 30df 3087  2.2.2?1.1.170.0.</span><br><span class="line">0017ee0: 302f 2fd7 2f7f 2f27 2ecf 2e77 2e1f 2dc7  0//././&apos;...w..-.</span><br><span class="line">0017ef0: 2d6f 2d17 2cbf 2c67 2c0f 2bb7 2b5f 2b07  -o-.,.,g,.+.+_+.</span><br><span class="line">0017f00: 2aaf 2a57 29ff 29a7 294f 28f7 289f 2847  *.*W).).)O(.(.(G</span><br><span class="line">0017f10: 27ef 2797 273f 26e7 268f 2637 25df 2587  &apos;.&apos;.&apos;?&amp;.&amp;.&amp;7%.%.</span><br><span class="line">0017f20: 252f 24d7 247f 2427 23cf 2377 231f 22c7  %/$.$.$&apos;#.#w#.&quot;.</span><br><span class="line">0017f30: 226f 2217 21bf 2167 210f 20b7 205f 2007  &quot;o&quot;.!.!g!. . _ .</span><br><span class="line">0017f40: 1faf 1f57 1eff 1ea7 1e4f 1df7 0070 1d47  ...W.....O...p.G</span><br><span class="line">0017f50: 1cef 1c97 1c3f 1be7 1b8f 1b37 1adf 1a87  .....?.....7....</span><br><span class="line">0017f60: 1a2f 19d7 197f 1927 18cf 1877 181f 17c7  ./.....&apos;...w....</span><br><span class="line">0017f70: 176f 1717 16bf 1667 160f 15b7 155f 1507  .o.....g....._..</span><br><span class="line">0017f80: 14af 1457 13ff 13a7 134f 12f7 129f 1247  ...W.....O.....G</span><br><span class="line">0017f90: 11ef 1197 113f 10e7 108f 1037 0fdf 0f87  .....?.....7....</span><br><span class="line">0017fa0: 0f2f 0ed7 0e7f 0e27 0dcf 0d77 0d1f 0cc7  ./.....&apos;...w....</span><br><span class="line">0017fb0: 0c6f 0c17 0bbf 0b67 0b0f 0ab7 0a5f 0a07  .o.....g....._..</span><br><span class="line">0017fc0: 09af 0957 08ff 08a7 084f 07f7 079f 0747  ...W.....O.....G</span><br><span class="line">0017fd0: 06ef 0697 063f 05e7 058f 0537 04df 0487  .....?.....7....</span><br><span class="line">0017fe0: 042f 03d7 037f 0327 02cf 0277 021f 01c7  ./.....&apos;...w....</span><br><span class="line">0017ff0: 016f 0117 00bf 0063 e1c0 bb7a 0132 5500  .o.....c...z.2U.</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>注意页尾部包含page directory, slots的个数可以从page header中读取</li>
+<li>File Header中的FIL_PAGE_NEXT字段, 值为0x00000006, 也就是page no为6的页。</li>
+</ul>
+<ol start="5">
+<li>查看<strong>page 6</strong><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">0018000: 2ddb 788c 0000 0006 0000 0005 ffff ffff  -.x.............</span><br><span class="line">0018010: 0000 0000 0133 f431 45bf 0000 0000 0000  .....3.1E.......</span><br><span class="line">0018020: 0000 0000 0005 00a6 3946 8297 0000 0000  ........9F......</span><br><span class="line">0018030: 3935 0002 0142 0295 0000 0000 0000 0000  95...B..........</span><br><span class="line">0018040: 0000 0000 0000 0000 0091 0000 0000 0000  ................</span><br><span class="line">0018050: 0000 0000 0000 0000 0000 0000 0000 0100  ................</span><br><span class="line">0018060: 0200 1a69 6e66 696d 756d 0006 000b 0000  ...infimum......</span><br><span class="line">0018070: 7375 7072 656d 756d 0000 1000 1680 0001  supremum........</span><br><span class="line">0018080: 5300 0000 001d 6d81 0000 00a3 0110 0000  S.....m.........</span><br><span class="line">.......</span><br><span class="line">.......</span><br><span class="line">001bea0: 0000 0000 0000 0000 0000 0000 0070 38c7  .............p8.</span><br><span class="line">001beb0: 386f 3817 37bf 3767 370f 36b7 365f 3607  8o8.7.7g7.6.6_6.</span><br><span class="line">001bec0: 35af 3557 34ff 34a7 344f 33f7 339f 3347  5.5W4.4.4O3.3.3G</span><br><span class="line">001bed0: 32ef 3297 323f 31e7 318f 3137 30df 3087  2.2.2?1.1.170.0.</span><br><span class="line">001bee0: 302f 2fd7 2f7f 2f27 2ecf 2e77 2e1f 2dc7  0//././&apos;...w..-.</span><br><span class="line">001bef0: 2d6f 2d17 2cbf 2c67 2c0f 2bb7 2b5f 2b07  -o-.,.,g,.+.+_+.</span><br><span class="line">001bf00: 2aaf 2a57 29ff 29a7 294f 28f7 289f 2847  *.*W).).)O(.(.(G</span><br><span class="line">001bf10: 27ef 2797 273f 26e7 268f 2637 25df 2587  &apos;.&apos;.&apos;?&amp;.&amp;.&amp;7%.%.</span><br><span class="line">001bf20: 252f 24d7 247f 2427 23cf 2377 231f 22c7  %/$.$.$&apos;#.#w#.&quot;.</span><br><span class="line">001bf30: 226f 2217 21bf 2167 210f 20b7 205f 2007  &quot;o&quot;.!.!g!. . _ .</span><br><span class="line">001bf40: 1faf 1f57 1eff 1ea7 1e4f 1df7 1d9f 1d47  ...W.....O.....G</span><br><span class="line">001bf50: 1cef 1c97 1c3f 1be7 1b8f 1b37 1adf 1a87  .....?.....7....</span><br><span class="line">001bf60: 1a2f 19d7 197f 1927 18cf 1877 181f 17c7  ./.....&apos;...w....</span><br><span class="line">001bf70: 176f 1717 16bf 1667 160f 15b7 155f 1507  .o.....g....._..</span><br><span class="line">001bf80: 14af 1457 13ff 13a7 134f 12f7 129f 1247  ...W.....O.....G</span><br><span class="line">001bf90: 11ef 1197 113f 10e7 108f 1037 0fdf 0f87  .....?.....7....</span><br><span class="line">001bfa0: 0f2f 0ed7 0e7f 0e27 0dcf 0d77 0d1f 0cc7  ./.....&apos;...w....</span><br><span class="line">001bfb0: 0c6f 0c17 0bbf 0b67 0b0f 0ab7 0a5f 0a07  .o.....g....._..</span><br><span class="line">001bfc0: 09af 0957 08ff 08a7 084f 07f7 079f 0747  ...W.....O.....G</span><br><span class="line">001bfd0: 06ef 0697 063f 05e7 058f 0537 04df 0487  .....?.....7....</span><br><span class="line">001bfe0: 042f 03d7 037f 0327 02cf 0277 021f 01c7  ./.....&apos;...w....</span><br><span class="line">001bff0: 016f 0117 00bf 0063 2ddb 788c 0133 f431  .o.....c-.x..3.1</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>注意File Header中的FIL_PAGE_PREV字段, 值为0x00000005, 也就是page no为5的页。</li>
+<li>结合page 5可以看出, 叶子节点的两个页通过链表进行链接, 每个页内的数据通过记录头中的next_record字段进行链接。</li>
+</ul>
+<ol start="6">
+<li>存储结构图如下,<br><img src="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%AD%98%E5%82%A8%E7%A4%BA%E4%BE%8B2.jpg" alt="image"></li>
+</ol>
+<ol start="7">
+<li>小结</li>
+</ol>
+<ul>
+<li>对于单页存储不了的情况, 需要进行页分裂, 此时B+树会有多层结构, 最低层为叶子节点, 存储了具体的数据, 上面是索引节点, 只存储主键以及下一层节点所在的页信息</li>
+</ul>
+<h2 id="五-总结与思考"><a href="#五-总结与思考" class="headerlink" title="五. 总结与思考"></a>五. 总结与思考</h2><p>本文介绍了innodb的数据页存储, 以实例的方式讲解了innodb存储引擎如何存储一个表中数据的。但是我们仍然有很多问题没有给出答案,</p>
+<ol>
+<li>查找行记录时, 需要找到某个索引的root page, 这个信息是存储在哪里的?</li>
+<li>我们没有介绍段和区的相关内容, 这些在InnoDB数据存储时是如何使用的?</li>
+<li>我们查看数据时, 都是直接查看磁盘文件, 内存中的页与磁盘中的页有何区别, 内存中的脏页又是如何刷新到磁盘的?</li>
+</ol>
+<p>InnoDB存储引擎较为复杂, 不可能一次性将全部内容学会, 我们不妨每次带入一个问题, 深入寻找这个问题的答案, 关于这些问题, 我会在后续文章中再逐步介绍。</p>
+<h2 id="六-参考"><a href="#六-参考" class="headerlink" title="六. 参考"></a>六. 参考</h2><ol>
+<li>&lt;&lt;Mysql技术内幕 InnoDB存储引擎&gt;&gt;</li>
+<li>淘宝数据库内核月报</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+    <div>
+        
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">------ 本文结束------</div>
+    
+</div>
+
+        
+    </div>
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>谢谢你的支持！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://picturestore.nos-eastchina1.126.net/%E5%85%B6%E4%BB%96/WechatIMG2.png" alt="hongbshi WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://picturestore.nos-eastchina1.126.net/%E5%85%B6%E4%BB%96/WechatIMG5.jpeg" alt="hongbshi Alipay">
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+    
+    <div>
+        <ul class="post-copyright">
+        <li class="post-copyright-author">
+            <strong>本文作者：</strong>hongbshi
+        </li>
+        <li class="post-copyright-link">
+            <strong>本文链接：</strong>
+            <a href="/2020/10/12/InnoDB_DataPage/" title="InnoDB数据页存储">2020/10/12/InnoDB_DataPage/</a>
+        </li>
+        <li class="post-copyright-license">
+            <strong>版权声明： </strong>
+            本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0 CN</a> 许可协议。转载请注明出处！
+        </li>
+        </ul>
+    </div>
+    
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/28/link-library-introduce/" rel="next" title="浅谈C/C++链接库">
+                <i class="fa fa-chevron-left"></i> 浅谈C/C++链接库
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">hongbshi</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-简介"><span class="nav-text">一. 简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-InnoDB存储结构"><span class="nav-text">二. InnoDB存储结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三-数据页存储"><span class="nav-text">三. 数据页存储</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-独立表空间"><span class="nav-text">3.1 独立表空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-页存储"><span class="nav-text">3.2 页存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-数据页"><span class="nav-text">3.3 数据页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-innodb行存储"><span class="nav-text">3.4 innodb行存储</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四-实例讲解"><span class="nav-text">四. 实例讲解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-单页存储"><span class="nav-text">4.1 单页存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-多页存储"><span class="nav-text">4.2 多页存储</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五-总结与思考"><span class="nav-text">五. 总结与思考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六-参考"><span class="nav-text">六. 参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">hongbshi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'NNyFD1qeChQyvgVBdtmlvTUp-gzGzoHsz',
+        appKey: 'kOthqdrxbt51oKdmYiYw9Jou',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("NNyFD1qeChQyvgVBdtmlvTUp-gzGzoHsz", "kOthqdrxbt51oKdmYiYw9Jou");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

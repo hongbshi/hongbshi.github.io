@@ -96,7 +96,7 @@
 <meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/B%2B%E6%A0%91%E7%A4%BA%E4%BE%8B.jpg">
 <meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%AD%98%E5%82%A8%E7%A4%BA%E4%BE%8B1.jpg">
 <meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/innodb%E6%95%B0%E6%8D%AE%E9%A1%B5%E5%AD%98%E5%82%A8%E7%A4%BA%E4%BE%8B2.jpg">
-<meta property="og:updated_time" content="2020-10-12T02:09:48.099Z">
+<meta property="og:updated_time" content="2020-10-19T02:33:54.154Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="InnoDB数据页存储">
 <meta name="twitter:description" content="一. 简介 Mysql是目前最为流行的关系型数据库管理系统, 具有体积小、速度快、开放源码等优势。InnoDB是Mysql使用最广泛的存储引擎, InnoDB进行了行锁设计, 支持MVCC, 提供一致性非锁定读。学习InnoDB数据页存储, 能够让我们更加深入的理解InnoDB的一些特性。 程序 = 数据结构 + 算法, 对于Mysql而言也是如此。由于数据持久化的需要, Mysql的数据不仅存储">
@@ -720,9 +720,9 @@
 </li>
 </ol>
 <ul>
-<li>首先定位到最小记录的位置, 最小记录占有5字节(记录头) + 8字节(内容) = 13字节, 最小记录所在的位置为001005e, 根据最小记录的记录头信息, 可以计算出下一个记录所在位置001005e + 0030 = 001008e</li>
-<li>001008e是主键为1的记录所在位置, 接着计算下一个记录的位置001008e + ffea = 0010078, 这里需要注意的是, 加法运算时, 只保留后面4位的结果, 可以看到这个位置就是我们第一次插入的主键为2的记录</li>
-<li>之后, 继续计算下一个记录所在位置, 0010078 + fff3 = 1006b, 这个就是最大记录所在的位置</li>
+<li>首先定位到最小记录的位置, 最小记录占有5字节(记录头) + 8字节(内容) = 13字节, 最小记录所在的位置为0010063, 根据最小记录的记录头信息, 可以计算出下一个记录所在位置0010063 + 0030 = 0010093。这里需要注意的是, 记录所在位置使用的是内容开始的位置。</li>
+<li>0010093是主键为1的记录所在位置, 接着计算下一个记录的位置0010093 + ffea = 001007d, 这里需要注意的是, 加法运算时, 只保留后面4位的结果, 可以看到这个位置就是我们第一次插入的主键为2的记录</li>
+<li>之后, 继续计算下一个记录所在位置, 001007d + fff3 = 10070, 这个就是最大记录所在的位置</li>
 <li>在查找某个具体的行记录时, 可以先利用page directory进行近似的二分查找, 之后再进行链表查找。</li>
 </ul>
 <ol start="6">

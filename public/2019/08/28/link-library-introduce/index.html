@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="编译,链接,动态链接库,静态链接库,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一. 说明 本文后续代码的编译以及执行环境为Centos 7.6 x86_64, g++ 4.8.5 本文后续会用到linux下nm, ldd命令。nm用于查看文件中的符号, 例如变量, 函数名称。ldd用于查看动态链接库或者可执行文件的依赖库(动态链接库)。  二. 编译链接 程序员写出的代码为.c或者.cpp, 这些文件需要经过: 预处理(处理代码中的include, 宏等)、编译(生成汇编代">
+<meta name="keywords" content="编译,链接,动态链接库,静态链接库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈C&#x2F;C++链接库">
+<meta property="og:url" content="http://yoursite.com/2019/08/28/link-library-introduce/index.html">
+<meta property="og:site_name" content="随园">
+<meta property="og:description" content="一. 说明 本文后续代码的编译以及执行环境为Centos 7.6 x86_64, g++ 4.8.5 本文后续会用到linux下nm, ldd命令。nm用于查看文件中的符号, 例如变量, 函数名称。ldd用于查看动态链接库或者可执行文件的依赖库(动态链接库)。  二. 编译链接 程序员写出的代码为.c或者.cpp, 这些文件需要经过: 预处理(处理代码中的include, 宏等)、编译(生成汇编代">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-08-29T03:13:54.771Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅谈C&#x2F;C++链接库">
+<meta name="twitter:description" content="一. 说明 本文后续代码的编译以及执行环境为Centos 7.6 x86_64, g++ 4.8.5 本文后续会用到linux下nm, ldd命令。nm用于查看文件中的符号, 例如变量, 函数名称。ldd用于查看动态链接库或者可执行文件的依赖库(动态链接库)。  二. 编译链接 程序员写出的代码为.c或者.cpp, 这些文件需要经过: 预处理(处理代码中的include, 宏等)、编译(生成汇编代">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/28/link-library-introduce/">
+
+
+
+
+
+  <title>浅谈C/C++链接库 | 随园</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">随园</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/28/link-library-introduce/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="hongbshi">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随园">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">浅谈C/C++链接库</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-28T16:34:08+08:00">
+                2019-08-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C-C/" itemprop="url" rel="index">
+                    <span itemprop="name">C/C++</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C-C/链接库/" itemprop="url" rel="index">
+                    <span itemprop="name">链接库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/08/28/link-library-introduce/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/08/28/link-library-introduce/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/08/28/link-library-introduce/" class="leancloud_visitors" data-flag-title="浅谈C/C++链接库">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">Visitors&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="一-说明"><a href="#一-说明" class="headerlink" title="一. 说明"></a>一. 说明</h2><ol>
+<li>本文后续代码的编译以及执行环境为Centos 7.6 x86_64, g++ 4.8.5</li>
+<li>本文后续会用到linux下nm, ldd命令。nm用于查看文件中的符号, 例如变量, 函数名称。ldd用于查看动态链接库或者可执行文件的依赖库(动态链接库)。</li>
+</ol>
+<h2 id="二-编译链接"><a href="#二-编译链接" class="headerlink" title="二. 编译链接"></a>二. 编译链接</h2><ol>
+<li>程序员写出的代码为.c或者.cpp, 这些文件需要经过: <strong>预处理(处理代码中的include, 宏等)、编译(生成汇编代码)、汇编(将汇编代码生成二进制文件)、链接</strong>才能生成可执行程序。<strong>本文将预处理、编译、汇编的过程都看做是编译, 简化读者理解。更多细节可以参考相关资料</strong>。</li>
+<li>生成可执行文件后, 通过终端进行执行</li>
+<li>g++参数说明,</li>
+</ol>
+<ul>
+<li>-std=<code>c++11</code>: 使用c++11标准</li>
+<li>-o: 指定输出文件名称</li>
+</ul>
+<ol start="4">
+<li>链接器ld参数:</li>
+</ol>
+<ul>
+<li>-L: 指定链接时搜索的动态链接库路径</li>
+<li>-l: 链接某个库, 例如链接libmath.so, 写为-lmath</li>
+</ul>
+<h3 id="2-1-编译"><a href="#2-1-编译" class="headerlink" title="2.1 编译"></a>2.1 编译</h3><ol>
+<li>对于c或者<code>c++</code>项目而言, 我们认为单个c或者cpp文件是一个编译单元, 通过编译器(gcc, g++, clang, clang++)可以生成编译后的<strong>二进制文件</strong>。例如: 编译file1.cpp, 可以生成file1.o。对于单个编译单元而言, 里面会有一些符号, 例如函数名称, 变量名称, 类名。这些符号可以分为三类: </li>
+</ol>
+<ul>
+<li>对外提供的, 也就是说其他的编译单元可以使用的</li>
+<li>对外依赖的, 也就是说本单元需要外部的其他编译单元提供的符号</li>
+<li>自己内部使用的, 这种符号只有本编译单元自身需要使用, 外部不可见</li>
+</ul>
+<ol start="2">
+<li>通过nm, 我们可以查看某个编译单元存在哪些符号</li>
+</ol>
+<h3 id="2-2-链接"><a href="#2-2-链接" class="headerlink" title="2.2 链接"></a>2.2 链接</h3><ol>
+<li>C/C++项目中含有很多个c文件或者cpp文件, 这些文件经过编译生成了对应的二进制文件。需要通过链接器将这些文件链接, 进而生成可执行程序。</li>
+<li>linux下链接器为ld, 利用该工具我们可以将这些文件链接, 进而生成可执行程序。</li>
+<li><strong>在进行链接时, 每个编译单元需要的符号, 都需要能够找到对应的定义。例如: 某个编译单元需要其他编译单元提供符号fun1, 这是一个函数, 如果链接器没能从其他编译单元找到这个符号, 就会报我们经常看到的未定义错误。若果出现多次, 则会报出重复定义的错误。</strong></li>
+</ol>
+<h3 id="2-3-示例"><a href="#2-3-示例" class="headerlink" title="2.3 示例"></a>2.3 示例</h3><ol>
+<li><p>math.h</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> _MATH_H_</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _MATH_H_</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>math.cpp</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"math.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>main.cpp</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"math.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">100</span>, b = <span class="number">200</span>;</span><br><span class="line">    <span class="keyword">int</span> result = add(a, b);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; result &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>生成可执行文件</p>
+</li>
+</ol>
+<ul>
+<li>编译math.cpp: g++ -std=c++11 -c math.cpp, 生成math.o</li>
+<li>编译main.cpp: g++ -std=c++11 -c main.cpp, 生成main.o</li>
+<li>生成可以执行的文件: g++ -v math.o main.o -o main, 可以看到g++的编译链接过程</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Using built-in specs.</span><br><span class="line">COLLECT_GCC=g++</span><br><span class="line">COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/lto-wrapper</span><br><span class="line">Target: x86_64-redhat-linux</span><br><span class="line">Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-bootstrap --enable-shared --enable-threads=posix --enable-checking=release --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-linker-hash-style=gnu --enable-languages=c,c++,objc,obj-c++,java,fortran,ada,go,lto --enable-plugin --enable-initfini-array --disable-libgcj --with-isl=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/isl-install --with-cloog=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/cloog-install --enable-gnu-indirect-function --with-tune=generic --with-arch_32=x86-64 --build=x86_64-redhat-linux</span><br><span class="line">Thread model: posix</span><br><span class="line">gcc version 4.8.5 20150623 (Red Hat 4.8.5-36) (GCC)</span><br><span class="line">COMPILER_PATH=/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/:/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/:/usr/libexec/gcc/x86_64-redhat-linux/:/usr/lib/gcc/x86_64-redhat-linux/4.8.5/:/usr/lib/gcc/x86_64-redhat-linux/</span><br><span class="line">LIBRARY_PATH=/usr/lib/gcc/x86_64-redhat-linux/4.8.5/:/usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../:/lib/:/usr/lib/</span><br><span class="line">COLLECT_GCC_OPTIONS=&apos;-v&apos; &apos;-o&apos; &apos;main&apos; &apos;-shared-libgcc&apos; &apos;-mtune=generic&apos; &apos;-march=x86-64&apos;</span><br><span class="line">/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/collect2 --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o main /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/4.8.5/crtbegin.o -L/usr/lib/gcc/x86_64-redhat-linux/4.8.5 -L/usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../.. main.o math.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-redhat-linux/4.8.5/crtend.o /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/crtn.o</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>其中最后一行调用collect2(对ld进行了包装)会执行真正的链接操作, 我们直接调用这一句也可以生成main可执行文件</strong></li>
+<li>可以看出linux下的链接操作比较复杂, 不是简单的ld main.o math.o即可成功的。</li>
+</ul>
+<h2 id="三-问题"><a href="#三-问题" class="headerlink" title="三. 问题"></a>三. 问题</h2><p>通过上面的介绍, 我们知道一个c/cpp文件通过编译链接, 最终生成可执行文件。无论任何语言, 程序员在写代码时, 都不可避免需要使用到库, 本文主要介绍C/C++中的库, 总体而言, 我们将这些库分为静态链接库(通常以.a结尾)，动态链接库(通常以.so结尾)。首先我们来看几个问题:</p>
+<ol>
+<li>什么是静态链接库?什么是动态链接库?</li>
+<li>静态链接库如何生成?动态链接库如何生成?</li>
+<li>静态链接库是否可以依赖其他的静态链接库? 是否可以依赖其他动态链接库?</li>
+<li>动态链接库是否可以依赖其他的静态链接库? 是否可以依赖其他的动态链接库?</li>
+<li>链接静态库时?其依赖的库该如何链接?</li>
+<li>链接动态库时?其依赖的库该如何链接?</li>
+<li>使用第三方库时, 使用静态链接库还是动态链接库?</li>
+</ol>
+<h2 id="四-Hello-World"><a href="#四-Hello-World" class="headerlink" title="四. Hello World"></a>四. Hello World</h2><p>本节以hello world为例,</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"hello world"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>编译程序: g++ -std=c++11 -o main main.cpp</li>
+<li>使用ldd查看main的依赖: ldd main</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">linux-vdso.so.1 =&gt;  (0x00007ffcf53fa000)</span><br><span class="line">libstdc++.so.6 =&gt; /lib64/libstdc++.so.6 (0x00007f7828b3b000)</span><br><span class="line">libm.so.6 =&gt; /lib64/libm.so.6 (0x00007f7828839000)</span><br><span class="line">libgcc_s.so.1 =&gt; /lib64/libgcc_s.so.1 (0x00007f7828623000)</span><br><span class="line">libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f7828256000)</span><br><span class="line">/lib64/ld-linux-x86-64.so.2 (0x00007f7828e42000)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>可以看出, <strong>最简单的hello world程序也需要链接一些库</strong></li>
+<li>上述的几种链接库, 感兴趣的可以逐个研究</li>
+</ul>
+<h2 id="五-动态链接库-vs-静态链接库"><a href="#五-动态链接库-vs-静态链接库" class="headerlink" title="五. 动态链接库 vs 静态链接库"></a>五. 动态链接库 vs 静态链接库</h2><ol>
+<li>本节以2.3中的示例代码为例, 将math.h, math.cpp打包为静态链接库以及动态链接库, 在main.cpp中引用</li>
+</ol>
+<h3 id="5-1-静态链接库"><a href="#5-1-静态链接库" class="headerlink" title="5.1 静态链接库"></a>5.1 静态链接库</h3><ol>
+<li>编译: g++ -std=c++11 -fPIC -c math.cpp</li>
+</ol>
+<ul>
+<li>fPIC用于生成位置无关的代码, 更多细节可以查找相关资料</li>
+</ul>
+<ol start="2">
+<li>生成静态链接库: ar -crv libmath.a math.o</li>
+<li>使用这个静态链接库:</li>
+</ol>
+<ul>
+<li>使用静态库时, 我们需要math.h文件, 这个文件中定义了这个库对外提供的功能</li>
+<li>除了math.h文件, 我们需要在链接阶段链接libmath.a</li>
+</ul>
+<ol start="4">
+<li>示例: main.cpp中已经导入了math.h文件, 编译main.c并链接libmath.a, g++ -std=c++11 -o main main.cpp -L. -lmath</li>
+<li>ldd main可以看出, main文件不再依赖libmath.a文件</li>
+</ol>
+<h3 id="5-2-动态链接库"><a href="#5-2-动态链接库" class="headerlink" title="5.2 动态链接库"></a>5.2 动态链接库</h3><ol>
+<li>生成动态链接库: g++ -std=c++11 -shared -fPIC math.cpp -o libmath.so</li>
+<li>使用动态链接库:</li>
+</ol>
+<ul>
+<li>需要使用math.h头文件, 该文件定义了库对外提供的功能</li>
+<li>链接阶段需要链接libmath.so</li>
+</ul>
+<ol start="3">
+<li>示例: g++ -std=c++11 -o main main.cpp -L. -lmath</li>
+<li><p>执行main, 会发现无法执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./main: error while loading shared libraries: libmath.so: cannot open shared object file: No such file or directory</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>我们先用ldd 查看main的依赖库:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">linux-vdso.so.1 =&gt;  (0x00007ffd2adde000)</span><br><span class="line">libmath.so =&gt; not found</span><br><span class="line">libstdc++.so.6 =&gt; /lib64/libstdc++.so.6 (0x00007fd3b7ee6000)</span><br><span class="line">libm.so.6 =&gt; /lib64/libm.so.6 (0x00007fd3b7be4000)</span><br><span class="line">libgcc_s.so.1 =&gt; /lib64/libgcc_s.so.1 (0x00007fd3b79ce000)</span><br><span class="line">libc.so.6 =&gt; /lib64/libc.so.6 (0x00007fd3b7601000)</span><br><span class="line">/lib64/ld-linux-x86-64.so.2 (0x00007fd3b81ed000)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>很奇怪, libmath.so没有找到, 我们在第三步编译时明明将这个库加入进去了。这个是由于, 在链接阶段, 链接器可以在当前目录找到libmath.so。执行阶段, 搜索动态链接库时, 并没有包含当前目录, 所以报错。我们可以通过export LD_LIBRARY_PATH=/libpath将libmath.so所在路径放入动态链接库的搜索路径中。此时即可成功执行。</p>
+<h3 id="5-3-对比"><a href="#5-3-对比" class="headerlink" title="5.3 对比"></a>5.3 对比</h3><ol>
+<li>静态链接库, 动态链接库都是二进制文件(ELF格式, 详细信息可以查找相关资料)</li>
+<li>从静态链接库生成的过程来看, 其本质就是将多个编译单元(.o文件), 打包为一个新的文件。链接静态链接库时, 会将静态链接库的代码合并进程序中。</li>
+<li>链接动态链接库时, 并不会将动态链接库的内容合并进代码中, 而是在程序执行时, 搜索动态链接库, 再进行链接。</li>
+</ol>
+<h2 id="六-库之间的依赖"><a href="#六-库之间的依赖" class="headerlink" title="六. 库之间的依赖"></a>六. 库之间的依赖</h2><h3 id="6-1-源代码"><a href="#6-1-源代码" class="headerlink" title="6.1 源代码"></a>6.1 源代码</h3><ol>
+<li><p>first.h</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __FIRST_H_</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __FIRST_H_</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">first</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>first.cpp</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">"first.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">first</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"This is first!\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>second.h</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __SECOND_H_</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __SECOND_H_</span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">second</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>second.cpp</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">"first.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">"second.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">second</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"This is second!\n"</span>);</span><br><span class="line">    first();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>main.cpp</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#include&quot;second.h&quot;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    second();</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="6-2-静态库依赖静态库"><a href="#6-2-静态库依赖静态库" class="headerlink" title="6.2 静态库依赖静态库"></a>6.2 静态库依赖静态库</h3><ol>
+<li><p>生成libfirst.a静态链接库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 -fPIC -c first.cpp</span><br><span class="line">ar -crv libfirst.a first.o</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>生成libsecond.a并链接libfirst.a</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 -c second.cpp -L. -lfirst</span><br><span class="line">ar -crv libsecond.a second.o</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>main.cpp中使用libsecond.a<br>执行: g++ -std=c++11 main.cpp -L. -lsecond -o main<br>会出现以下错误:<br>./libsecond.a(second.o): In function <code>second()&#39;:
+second.cpp:(.text+0xf): undefined reference to</code>first()’<br>collect2: error: ld returned 1 exit status</p>
+</li>
+</ol>
+<ol start="4">
+<li>解释说明</li>
+</ol>
+<ul>
+<li>通过nm, 我们查看libsecond.a中的符号, 找出未定义的符号, 执行nm -u libsecond.a, 即可发现first并没有定义(编译器编译后的符号并不是first, 我这里是_Z5firstv)。我们明明在生成libsecond.a时链接了libfirst.a?</li>
+<li>主要的原因是: 生成静态链接库时, 只是将second.cpp生成的second.o打包, 并没有真正的将libfirst.a中的内容链接进libsecond.a</li>
+<li>静态库不与其他静态库链接。我们使用archiver工具(例如Linux上的ar)将多个静态链接库打包为一个静态链接库</li>
+</ul>
+<ol start="5">
+<li>解决方案</li>
+</ol>
+<ul>
+<li>将first.cpp, second.cpp打包为一个静态链接库: g++ -std=c++11 -fPIC -c first.cpp second.cpp, ar -crv libsecond.a first.o second.o。main中可以直接链接libsecond.a即可</li>
+<li>同时链接libsecond.a, libfirst.a</li>
+</ul>
+<h3 id="6-3-动态库依赖静态库"><a href="#6-3-动态库依赖静态库" class="headerlink" title="6.3 动态库依赖静态库"></a>6.3 动态库依赖静态库</h3><ol>
+<li>生成libfirst.a静态链接库, 这一步与5.2节相同</li>
+<li>生成libsecond.so静态链接libfirst.a<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 second.cpp -fPIC -shared -o libsecond.so -L. -lfirst</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>nm -u libseond.so, 我们可以看出, 并没有出现first, 也就是说, libfirst.a已经被链接进libsecond.so中了</li>
+</ul>
+<ol start="3">
+<li>编译main.cpp<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 main.cpp -L. -lsecond -o main</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="6-4-静态库依赖动态库"><a href="#6-4-静态库依赖动态库" class="headerlink" title="6.4 静态库依赖动态库"></a>6.4 静态库依赖动态库</h3><ol>
+<li><p>生成libfirst.so</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 first.cpp -shared -fPIC -o libfirst.so</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>生成libsecond.a链接libfirst.so</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 -c second.cpp -fPIC -L. -lfirst</span><br><span class="line">ar crv libsecond.a second.o</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>nm -u libsecond.a, 可以看到_Z5firstv, 说明并没有将libfirst.so中包含进libsecond.a</li>
+</ul>
+<ol start="3">
+<li>编译main.cpp<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 main.cpp -L. -lsecond -lfirst -o main</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>如果没有链接first, 会发现链接错误, 找不到first函数的定义</li>
+</ul>
+<h3 id="6-5-动态库依赖动态库"><a href="#6-5-动态库依赖动态库" class="headerlink" title="6.5 动态库依赖动态库"></a>6.5 动态库依赖动态库</h3><ol>
+<li><p>生成libfirst.so</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 first.cpp -shared -fPIC -o libfirst.so</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>生成libsecond.so链接libfirst.so</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 second.cpp -shared -fPIC -o libsecond.so -L. -lfirst</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>nm -u libsecond.so, 可以看到_Z5firstv, 这个就是first函数</li>
+<li>ldd libsecond.so, 也可以看到libfirst.so</li>
+<li>可以看出, 使用libsecond.so时, 仍然需要libfirst.so</li>
+</ul>
+<ol start="3">
+<li>编译main.cpp<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -std=c++11 main.cpp -L. -lsecond -o main</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>可以看出, 能够成功编译。</li>
+<li>之前讲过libsecond.so需要依赖libfirst.so, 此处为何我们只链接libsecond.so也能成功呢?这里是因为链接器会自动搜索动态链接库的依赖库</li>
+</ul>
+<h2 id="七-总结"><a href="#七-总结" class="headerlink" title="七. 总结"></a>七. 总结</h2><ol>
+<li>c或者cpp文件经过<strong>编译、链接</strong>生成可执行文件</li>
+<li>单个c文件或者cpp文件是一个编译单元。每个编译单元存在3种符号: 自己使用的, 依赖于外部的以及对外提供的。</li>
+<li>链接器是将多个编译单元的符号相互链接以形成可执行文件。</li>
+<li>库可以分为静态链接库(.a)以及动态链接库(.so)。</li>
+<li>使用库时, 除了库文件, 还需要对应的头文件。</li>
+<li>单个c文件或者cpp文件, 可能依赖其他的库文件, 但是在编译时, 只需要有声明, 并不需要有具体的定义。</li>
+<li>静态库没有链接操作, 静态库只是将多个.o文件打包, 并没有其他操作。静态库可能依赖其他的静态库或者其他的动态库, 用户在使用静态库时, 需要手动链接这些依赖。</li>
+<li>动态库有链接操作, 创建动态库时可以链接其他的库, 也可以不链接, 如果链接静态库, 则会将静态库的内容全部放入动态库, 如果链接动态库, 只是放入符号, 在程序初始化时, 将依赖的这些动态库也加载。如果这个动态库依赖了其他库, 但是没有链接, 也可以生成动态库, 但用户在使用这个动态链接库时, 需要手动链接这些依赖, 由于使用者很难知道这些依赖, 所以通常不使用这种方式。</li>
+<li>总体而言, 动态库在程序执行阶段才会装进程序, 静态库则在链接阶段直接放进程序。动态库可以由多个程序共享, 节省内存，易于升级。静态库外部依赖少, 更易于部署。</li>
+</ol>
+<h2 id="八-扩展"><a href="#八-扩展" class="headerlink" title="八. 扩展"></a>八. 扩展</h2><ol>
+<li>动态库升级问题?假设现在有2个程序: p1, p2, 一个动态链接库libmath.so.1。如果现在math库提供了新版本libmath.so.2, 程序p1需要使用libmath.so.2的新功能, p2则不想使用, 此时该如何升级math库?</li>
+</ol>
+<ul>
+<li>如果math不兼容前一版, 则系统中需要同时存在两个版本的math库, p1, p2分别链接不同的版本</li>
+<li>如果math兼容前一版, 系统中是否可以只保留新版的math库呢?此时p1, p2又是否需要重新编译呢?这个问题留给读者自行思考。</li>
+</ul>
+<ol start="2">
+<li>某个动态链接库<strong>lib1</strong>动态链接了库<strong>libbase</strong>, 现在应用程序中使用了<strong>lib1</strong>以及<strong>libbase</strong>, 编译应用程序时, 是否需要链接<strong>libbase</strong>?</li>
+</ol>
+<ul>
+<li>应用程序不仅需要链接<strong>lib1</strong>, 也需要链接<strong>libbase</strong></li>
+<li>链接<strong>lib1</strong>只能保证应用程序依赖<strong>lib1</strong>的部分能够正确解析</li>
+<li>虽然<strong>lib1</strong>动态链接了<strong>libbase</strong>, 但是动态链接真正进行符号解析是在程序执行阶段, 编译阶段无法获取<strong>libbase</strong>的相关信息, 应用程序中如果也使用了<strong>libbase</strong>中的函数, 则必须链接<strong>libbase</strong>, 否则会出现符号未定义</li>
+<li>如果<strong>lib1</strong>静态链接了<strong>libbase</strong>, 也就是说包含了<strong>libbase</strong>中的函数, 则应用程序不需要在链接<strong>libbase</strong></li>
+</ul>
+<ol start="3">
+<li>菱形依赖问题, A依赖于B以及C, B、C都依赖于D, 但是是不同版本, 例如B依赖于D1, C依赖于D2, 这种情况下如何链接?</li>
+</ol>
+<ul>
+<li>D2兼容于D1(ABI层面兼容), 程序直接链接D2</li>
+<li>D2不兼容于D1, 查看B是否可以依赖D2重新编译</li>
+<li>链接器的参数, 直接链接两个版本。ld的参数–default-symver或者–version-script</li>
+</ul>
+<ol start="4">
+<li>讨论</li>
+</ol>
+<ul>
+<li>动态链接会有大量的依赖问题(windows dll hell)</li>
+<li>由于采用模块化, 又允许升级单个模块, 菱形依赖问题对于很多语言都是存在的</li>
+<li>rust, go等语言都开始采用源码编译的方式, 解决依赖问题</li>
+</ul>
+<h2 id="九-参考"><a href="#九-参考" class="headerlink" title="九. 参考"></a>九. 参考</h2><ul>
+<li><a href="http://blog.chinaunix.net/uid-26548237-id-3837099.html" target="_blank" rel="noopener">http://blog.chinaunix.net/uid-26548237-id-3837099.html</a></li>
+<li><a href="https://www.cnblogs.com/fnlingnzb-learner/p/8119729.html" target="_blank" rel="noopener">https://www.cnblogs.com/fnlingnzb-learner/p/8119729.html</a></li>
+<li><a href="https://blog.csdn.net/coolwaterld/article/details/85088288" target="_blank" rel="noopener">https://blog.csdn.net/coolwaterld/article/details/85088288</a></li>
+<li><a href="https://blog.habets.se/2012/05/Shared-libraries-diamond-problem.html" target="_blank" rel="noopener">https://blog.habets.se/2012/05/Shared-libraries-diamond-problem.html</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+    <div>
+        
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">------ 本文结束------</div>
+    
+</div>
+
+        
+    </div>
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>谢谢你的支持！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://picturestore.nos-eastchina1.126.net/%E5%85%B6%E4%BB%96/WechatIMG2.png" alt="hongbshi WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://picturestore.nos-eastchina1.126.net/%E5%85%B6%E4%BB%96/WechatIMG5.jpeg" alt="hongbshi Alipay">
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+    
+    <div>
+        <ul class="post-copyright">
+        <li class="post-copyright-author">
+            <strong>本文作者：</strong>hongbshi
+        </li>
+        <li class="post-copyright-link">
+            <strong>本文链接：</strong>
+            <a href="/2019/08/28/link-library-introduce/" title="浅谈C/C++链接库">2019/08/28/link-library-introduce/</a>
+        </li>
+        <li class="post-copyright-license">
+            <strong>版权声明： </strong>
+            本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0 CN</a> 许可协议。转载请注明出处！
+        </li>
+        </ul>
+    </div>
+    
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/27/swoole-server-introduce/" rel="next" title="swoole_server_introduce">
+                <i class="fa fa-chevron-left"></i> swoole_server_introduce
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/10/12/InnoDB_DataPage/" rel="prev" title="InnoDB数据页存储">
+                InnoDB数据页存储 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">hongbshi</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-说明"><span class="nav-text">一. 说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-编译链接"><span class="nav-text">二. 编译链接</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-编译"><span class="nav-text">2.1 编译</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-链接"><span class="nav-text">2.2 链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-示例"><span class="nav-text">2.3 示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三-问题"><span class="nav-text">三. 问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四-Hello-World"><span class="nav-text">四. Hello World</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五-动态链接库-vs-静态链接库"><span class="nav-text">五. 动态链接库 vs 静态链接库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-静态链接库"><span class="nav-text">5.1 静态链接库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-动态链接库"><span class="nav-text">5.2 动态链接库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-对比"><span class="nav-text">5.3 对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六-库之间的依赖"><span class="nav-text">六. 库之间的依赖</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-源代码"><span class="nav-text">6.1 源代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-静态库依赖静态库"><span class="nav-text">6.2 静态库依赖静态库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-动态库依赖静态库"><span class="nav-text">6.3 动态库依赖静态库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-静态库依赖动态库"><span class="nav-text">6.4 静态库依赖动态库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-5-动态库依赖动态库"><span class="nav-text">6.5 动态库依赖动态库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#七-总结"><span class="nav-text">七. 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#八-扩展"><span class="nav-text">八. 扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#九-参考"><span class="nav-text">九. 参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">hongbshi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'NNyFD1qeChQyvgVBdtmlvTUp-gzGzoHsz',
+        appKey: 'kOthqdrxbt51oKdmYiYw9Jou',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("NNyFD1qeChQyvgVBdtmlvTUp-gzGzoHsz", "kOthqdrxbt51oKdmYiYw9Jou");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

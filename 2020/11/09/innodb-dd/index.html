@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="水平触发,边沿触发,网络编程,">
+  <meta name="keywords" content="Mysql,InnoDB,">
 
 
 
@@ -79,18 +79,23 @@
 
 
 
-<meta name="description" content="一. 基础1.1 水平触发 基本概念   读缓冲区不为空时, 读事件触发。 写缓冲区不为满时, 写事件触发。    处理流程   accept新的连接, 监听读事件。 读事件到达, 处理读事件。 需要写入数据, 向fd中写数据, 一次无法写完, 开启写事件监听。 写事件到达, 继续写入数据, 写完后关闭写事件。    优缺点   不会遗漏事件, 易编程。 长连接需要写入的数据量大时, 会频繁开启关">
-<meta name="keywords" content="水平触发,边沿触发,网络编程">
+<meta name="description" content="一. 基础知识 本文使用的Mysql版本: 8.0.12-debug 本文用到的Linux命令: xxd 本文需要使用到的知识点: Mysql 数据页存储, 可以参见 https://segmentfault.com/a/1190000037436803  1.1 问题 Data Dictironary是什么?   Data Dictironary(DD, 数据字典)是有关数据库对象的合集, 例如">
+<meta name="keywords" content="Mysql,InnoDB">
 <meta property="og:type" content="article">
-<meta property="og:title" content="水平触发与边沿触发">
-<meta property="og:url" content="http://yoursite.com/2018/11/05/LT-ET/index.html">
+<meta property="og:title" content="InnoDB Data Dictionary">
+<meta property="og:url" content="http://yoursite.com/2020/11/09/innodb-dd/index.html">
 <meta property="og:site_name" content="随园">
-<meta property="og:description" content="一. 基础1.1 水平触发 基本概念   读缓冲区不为空时, 读事件触发。 写缓冲区不为满时, 写事件触发。    处理流程   accept新的连接, 监听读事件。 读事件到达, 处理读事件。 需要写入数据, 向fd中写数据, 一次无法写完, 开启写事件监听。 写事件到达, 继续写入数据, 写完后关闭写事件。    优缺点   不会遗漏事件, 易编程。 长连接需要写入的数据量大时, 会频繁开启关">
+<meta property="og:description" content="一. 基础知识 本文使用的Mysql版本: 8.0.12-debug 本文用到的Linux命令: xxd 本文需要使用到的知识点: Mysql 数据页存储, 可以参见 https://segmentfault.com/a/1190000037436803  1.1 问题 Data Dictironary是什么?   Data Dictironary(DD, 数据字典)是有关数据库对象的合集, 例如">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-05-27T01:49:32.146Z">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B81.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B82.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/SDI%E5%AD%98%E5%82%A8%E9%A1%B5.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:updated_time" content="2020-11-09T12:34:24.859Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="水平触发与边沿触发">
-<meta name="twitter:description" content="一. 基础1.1 水平触发 基本概念   读缓冲区不为空时, 读事件触发。 写缓冲区不为满时, 写事件触发。    处理流程   accept新的连接, 监听读事件。 读事件到达, 处理读事件。 需要写入数据, 向fd中写数据, 一次无法写完, 开启写事件监听。 写事件到达, 继续写入数据, 写完后关闭写事件。    优缺点   不会遗漏事件, 易编程。 长连接需要写入的数据量大时, 会频繁开启关">
+<meta name="twitter:title" content="InnoDB Data Dictionary">
+<meta name="twitter:description" content="一. 基础知识 本文使用的Mysql版本: 8.0.12-debug 本文用到的Linux命令: xxd 本文需要使用到的知识点: Mysql 数据页存储, 可以参见 https://segmentfault.com/a/1190000037436803  1.1 问题 Data Dictironary是什么?   Data Dictironary(DD, 数据字典)是有关数据库对象的合集, 例如">
+<meta name="twitter:image" content="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B81.jpg">
 
 
 
@@ -120,13 +125,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/11/05/LT-ET/">
+  <link rel="canonical" href="http://yoursite.com/2020/11/09/innodb-dd/">
 
 
 
 
 
-  <title>水平触发与边沿触发 | 随园</title>
+  <title>InnoDB Data Dictionary | 随园</title>
   
 
 
@@ -265,7 +270,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/05/LT-ET/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/09/innodb-dd/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="hongbshi">
@@ -282,7 +287,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">水平触发与边沿触发</h1>
+          <h1 class="post-title" itemprop="name headline">InnoDB Data Dictionary</h1>
         
 
         <div class="post-meta">
@@ -294,8 +299,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-05T11:21:50+08:00">
-                2018-11-05
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-11-09T20:30:35+08:00">
+                2020-11-09
               </time>
             
 
@@ -317,19 +322,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/网络编程/" itemprop="url" rel="index">
-                    <span itemprop="name">网络编程</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/网络编程/基础/" itemprop="url" rel="index">
-                    <span itemprop="name">基础</span>
+                  <a href="/categories/Mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">Mysql</span>
                   </a>
                 </span>
 
@@ -346,8 +340,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2018/11/05/LT-ET/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/11/05/LT-ET/" itemprop="commentCount"></span>
+                <a href="/2020/11/09/innodb-dd/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/11/09/innodb-dd/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -355,7 +349,7 @@
 
           
           
-             <span id="/2018/11/05/LT-ET/" class="leancloud_visitors" data-flag-title="水平触发与边沿触发">
+             <span id="/2020/11/09/innodb-dd/" class="leancloud_visitors" data-flag-title="InnoDB Data Dictionary">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -386,92 +380,190 @@
       
 
       
-        <h1 id="一-基础"><a href="#一-基础" class="headerlink" title="一. 基础"></a>一. 基础</h1><h2 id="1-1-水平触发"><a href="#1-1-水平触发" class="headerlink" title="1.1 水平触发"></a>1.1 水平触发</h2><ol>
-<li><p>基本概念</p>
-<blockquote>
-<ul>
-<li>读缓冲区不为空时, 读事件触发。</li>
-<li>写缓冲区不为满时, 写事件触发。</li>
-</ul>
-</blockquote>
-</li>
-<li><p>处理流程</p>
-<blockquote>
-<ul>
-<li>accept新的连接, 监听读事件。</li>
-<li>读事件到达, 处理读事件。</li>
-<li>需要写入数据, 向fd中写数据, 一次无法写完, 开启写事件监听。</li>
-<li>写事件到达, 继续写入数据, 写完后关闭写事件。</li>
-</ul>
-</blockquote>
-</li>
-<li><p>优缺点</p>
-<blockquote>
-<ul>
-<li>不会遗漏事件, 易编程。</li>
-<li>长连接需要写入的数据量大时, 会频繁开启关闭写事件。  </li>
-</ul>
-</blockquote>
-</li>
+        <h2 id="一-基础知识"><a href="#一-基础知识" class="headerlink" title="一. 基础知识"></a>一. 基础知识</h2><ol>
+<li>本文使用的Mysql版本: <code>8.0.12-debug</code></li>
+<li>本文用到的Linux命令: <code>xxd</code></li>
+<li>本文需要使用到的知识点: <code>Mysql</code> 数据页存储, 可以参见 <code>https://segmentfault.com/a/1190000037436803</code></li>
 </ol>
-<h2 id="1-2-边沿触发"><a href="#1-2-边沿触发" class="headerlink" title="1.2 边沿触发"></a>1.2 边沿触发</h2><ol>
-<li><p>基本概念</p>
-<blockquote>
-<ul>
-<li>读缓冲区状态变化时, 读事件触发, 网卡接受到新数据。</li>
-<li>写缓冲区状态变化时, 写事件触发, 网卡发出了新数据。</li>
-</ul>
-</blockquote>
-</li>
-<li><p>处理流程</p>
-<blockquote>
-<ul>
-<li>accept新的连接, 同时监听读写事件。</li>
-<li>读事件到达, 需要一直读取数据, 直到返回EAGAIN。</li>
-<li>写事件到达, 无数据处理则不处理, 有数据待写入则一直写入，直到写完或者返回EAGAIN。</li>
-</ul>
-</blockquote>
-</li>
-<li><p>优缺点</p>
-<blockquote>
-<ul>
-<li>不需要频繁开启关闭事件, 效率较高。</li>
-<li>读写事件处理不当, 可能导致事件丢失, 编程教复杂。</li>
-</ul>
-</blockquote>
-</li>
+<h3 id="1-1-问题"><a href="#1-1-问题" class="headerlink" title="1.1 问题"></a>1.1 问题</h3><ol>
+<li>Data Dictironary是什么?</li>
 </ol>
-<h2 id="1-3-选择"><a href="#1-3-选择" class="headerlink" title="1.3 选择"></a>1.3 选择</h2><ol>
-<li>概述<blockquote>
 <ul>
-<li>对于读事件而言，总体而言, 采用水平触发方式较好。应用程序在读取数据时，可能会一次无法读取全部数据，边沿触发在下一次可能不会触发。如果能够保证一次读取缓存的全部数据，可以采用边沿触发，效率更高, 但同时编程复杂度也高。</li>
-<li>对于写事件，当客户端服务端采用短连接或者采用长连接但发送的数据量比较少时(例如: Redis), 采用水平触发即可。当客户端与服务端是长连接并且数据写入的量比较大时(例如: nginx), 采用边沿触发, 因为边沿触发效率更高。</li>
-<li>目前，linux不支持读写事件分别设置不同的触发方式，具体采用哪种方式触发，需要根据具体需求。</li>
+<li>Data Dictironary(DD, 数据字典)是有关数据库对象的合集, 例如表、视图、索引等, 可以看做是数据库的元信息。换句话说, 数据字典存储了有关表结构的信息, 每个表具有的列, 表的索引等。</li>
 </ul>
-</blockquote>
-</li>
-</ol>
 <ol start="2">
-<li><p>监听套接字事件设置</p>
-<blockquote>
+<li>系统表是什么? 跟自己创建的表有何不同?</li>
+</ol>
 <ul>
-<li>监听套接字不需要监听写事件，只需要监听读事件。</li>
-<li>监听套接字一般采用水平触发方式。(nginx开启multi_accept时，会把监听套接字所有可读的事件全部读取，此时可以使用边沿触发。但为了保证连接不丢失，nginx仍然采用水平触发)</li>
+<li>系统表有很多, 常见的有<code>mysql.schemata</code>,<code>mysql.tables</code>, <code>mysql.indexes</code></li>
+<li>我们创建的表的元信息是放到系统表中的</li>
+<li>在内存中, 这些元信息以对象的方式提供给外部使用, 比如说, 创建一个表, 内存中会创建这个表的数据字典对象, 系统表以及我们创建的表都会有自己的数据字典对象</li>
+<li>可以认为系统表的元信息就存储在自己的数据字典对象中, 这些信息会被序列化到磁盘的mysql.ibd文件中</li>
 </ul>
-</blockquote>
-</li>
-<li><p>通信套接字设置</p>
-<blockquote>
+<ol start="3">
+<li>DD存储在哪些地方?</li>
+</ol>
+<p>这里是针对Mysql 8的数据字典,</p>
 <ul>
-<li>redis对于与客户端通信使用的套接字默认使用水平触发。</li>
-<li>nginx对于与客户端通信使用的套接字默认采用边沿触发。</li>
+<li>数据字典信息需要持久化, 存储在mysql.ibd文件中, 使用专门的表空间id</li>
+<li>在每个独立的表空间中, 也备份了一份这个表空间相关的dd对象序列化信息</li>
+<li>系统表空间, 也就是ibdata1文件中, 并没有存储dd对象的相关信息</li>
 </ul>
-</blockquote>
+<h3 id="1-2-DD存储"><a href="#1-2-DD存储" class="headerlink" title="1.2 DD存储"></a>1.2 DD存储</h3><p>Mysql 8之前, 数据字典存储结构如下图,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B81.jpg" alt="数据字典"></p>
+<p>从图中可以看出, DD信息存储在多个地方,</p>
+<ul>
+<li>部分数据存储在文件中</li>
+<li>部分数据存储在mysql系统表中</li>
+<li>InnoDB系统表也存储了部分数据</li>
+</ul>
+<p>这种存储方式存在以下问题:</p>
+<ol>
+<li>数据存储在多个地方, 难以维护管理</li>
+<li>MyISAM系统表容易损坏</li>
+<li>不支持原子操作</li>
+</ol>
+<p>Mysql 8 对数据字典进行了重新设计, 并且使用InnoDB存储,</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B82.jpg" alt="数据字典-Mysql 8"></p>
+<ul>
+<li>将原来存储数据字典的文件全部删除, 统一放到数据字典表空间中</li>
+<li>对于原来使用MyISAM存储的系统表, 全部替换为InnoDB存储, 为实现原子DDL提供了可能性</li>
+</ul>
+<h3 id="1-3-如何查看数据字典"><a href="#1-3-如何查看数据字典" class="headerlink" title="1.3 如何查看数据字典"></a>1.3 如何查看数据字典</h3><ol>
+<li>通过命令行连接Mysql服务器查看<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SET SESSION debug=&apos;+d,skip_dd_table_access_check&apos;;</span><br><span class="line">SELECT name, schema_id, hidden, type FROM mysql.tables where schema_id=1 AND hidden=&apos;System&apos;;</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<h1 id="二-参考"><a href="#二-参考" class="headerlink" title="二. 参考"></a>二. 参考</h1><ul>
-<li><a href="https://blog.csdn.net/dongfuye/article/details/50880251" target="_blank" rel="noopener">https://blog.csdn.net/dongfuye/article/details/50880251</a></li>
+<p>可以看到DD中存储了很多系统表,<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">+------------------------------+-----------+--------+------------+</span><br><span class="line">| name                         | schema_id | hidden | type       |</span><br><span class="line">+------------------------------+-----------+--------+------------+</span><br><span class="line">| catalogs                     |         1 | System | BASE TABLE |</span><br><span class="line">| character_sets               |         1 | System | BASE TABLE |</span><br><span class="line">| collations                   |         1 | System | BASE TABLE |</span><br><span class="line">| columns                      |         1 | System | BASE TABLE |</span><br><span class="line">| dd_properties                |         1 | System | BASE TABLE |</span><br><span class="line">| events                       |         1 | System | BASE TABLE |</span><br><span class="line">| index_stats                  |         1 | System | BASE TABLE |</span><br><span class="line">| indexes                      |         1 | System | BASE TABLE |</span><br><span class="line">| schemata                     |         1 | System | BASE TABLE |</span><br><span class="line">| tables                       |         1 | System | BASE TABLE |</span><br><span class="line">| tablespace_files             |         1 | System | BASE TABLE |</span><br><span class="line">| tablespaces                  |         1 | System | BASE TABLE |</span><br><span class="line">+------------------------------+-----------+--------+------------+</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>这里我们仅列出了一部分, InnoDB还存储了很多其他的系统表</li>
+<li>这些系统表存储了各种元数据, columns存储了表的列信息, indexes则存储了表的索引信息, schemata存储了数据库的信息。</li>
 </ul>
+<ol start="2">
+<li>通过 <code>ibd2sdi</code> 工具查看<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ibd2sdi test.ibd</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>tips: 可以通过utilities/ibd2sdi.cc文件, 查看反序列化过程, 进而可以看出sdi页面存储结构</li>
+</ul>
+<h3 id="1-4-Serialized-Dictionary-Information-SDI"><a href="#1-4-Serialized-Dictionary-Information-SDI" class="headerlink" title="1.4 Serialized Dictionary Information(SDI)"></a>1.4 Serialized Dictionary Information(SDI)</h3><ol>
+<li>SDI是什么?</li>
+</ol>
+<ul>
+<li>SDI, 字典序列化信息, 也就是将数据字典中的对象序列化后的数据</li>
+</ul>
+<ol start="2">
+<li>SDI如何组织?</li>
+</ol>
+<ul>
+<li>DD中包含很多的数据字典对象, 这些对象的SDI数据以B+树的方式进行组织</li>
+<li>SDI数据基本都是压缩后存储的, 压缩方式使用的是zlib</li>
+</ul>
+<ol start="3">
+<li>SDI举例</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mysqld_version_id"</span>:<span class="number">80012</span>,</span><br><span class="line">    <span class="attr">"dd_version"</span>:<span class="number">80012</span>,</span><br><span class="line">    <span class="attr">"sdi_version"</span>:<span class="number">1</span>,</span><br><span class="line">    <span class="attr">"dd_object_type"</span>:<span class="string">"Table"</span>,</span><br><span class="line">    <span class="attr">"dd_object"</span>:&#123;</span><br><span class="line">        <span class="attr">"name"</span>:<span class="string">"x"</span>,</span><br><span class="line">        <span class="attr">"columns"</span>:[</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="attr">"name"</span>:<span class="string">"id"</span>,</span><br><span class="line">                <span class="attr">"type"</span>:<span class="number">4</span>,</span><br><span class="line">                ...</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="attr">"name"</span>:<span class="string">"DB_TRX_ID"</span>,</span><br><span class="line">                <span class="attr">"type"</span>:<span class="number">10</span>,</span><br><span class="line">                ...</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="attr">"name"</span>:<span class="string">"DB_ROLL_PTR"</span>,</span><br><span class="line">                <span class="attr">"type"</span>:<span class="number">9</span>,</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        ],</span><br><span class="line">        ...</span><br><span class="line">        "indexes":[</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="attr">"name"</span>:<span class="string">"PRIMARY"</span>,</span><br><span class="line">                <span class="attr">"hidden"</span>:<span class="literal">false</span>,</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        ],</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>可以看到, SDI中存储了这个表的元信息, 比如说这个表的列组成, 索引信息等。</li>
+</ul>
+<h2 id="二-SDI存储页示例"><a href="#二-SDI存储页示例" class="headerlink" title="二. SDI存储页示例"></a>二. SDI存储页示例</h2><p>上文中, 我们说过在每个表的独立表空间中, 存储了这个表相关的DD对象序列化后的信息。在这一节, 我们学习如何查看SDI信息。</p>
+<ol>
+<li>我们首先建立一个表<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE `x` (</span><br><span class="line">  `id` int(11) NOT NULL,</span><br><span class="line">  PRIMARY KEY (`id`)</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>表所在的库是hbshi</li>
+</ul>
+<ol start="2">
+<li>查看这表的独立表空间文件, 通过 <code>xxd x.ibd x.txt</code> 查看这个表空间的数据页, 这里我们主要看第4页, 这1页存储了这个表相关的数据字典序列化信息,</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">000c000: 723e 3b3c 0000 0003 ffff ffff ffff ffff  r&gt;;&lt;............</span><br><span class="line">000c010: 0000 0000 0128 06fc 45bd 0000 0000 0000  .....(..E.......</span><br><span class="line">000c020: 0000 0000 0004 0002 04d2 8004 0000 0000  ................</span><br><span class="line">000c030: 0172 0001 0001 0002 0000 0000 0000 0000  .r..............</span><br><span class="line">000c040: 0000 ffff ffff ffff ffff 0000 0004 0000  ................</span><br><span class="line">000c050: 0002 00f2 0000 0004 0000 0002 0032 0100  .............2..</span><br><span class="line">000c060: 0201 0f69 6e66 696d 756d 0003 000b 0000  ...infimum......</span><br><span class="line">000c070: 7375 7072 656d 756d cb80 0000 10ff f100  supremum........</span><br><span class="line">000c080: 0000 0200 0000 0000 0000 0900 0000 0016  ................</span><br><span class="line">........</span><br><span class="line">........</span><br><span class="line">000fff0: 0000 0000 0070 0063 723e 3b3c 0128 06fc  .....p.cr&gt;;&lt;.(..</span><br></pre></td></tr></table></figure>
+<p>对于一个表空间而言, 可能会有多个数据字典对象, 这些对象序列化后会以B+树的方式组织, 我们看一下具体的存储结构,</p>
+<p>整体页存储结构:</p>
+<ul>
+<li>最小记录: 记录头[00c05e, 00c062], 具体数据[00c063, 00c06a]</li>
+<li>最大记录: 记录头[00c06b, 00c06f], 具体数据[00c070, 00c077]</li>
+<li>第1条记录: 2字节的内容长度[00c078, 00c079]; 5字节的记录头[00c07a, 00c07e]; 记录内容[00c07f, 00c16a]。</li>
+<li>第2条记录: 2字节的内容长度[00c16b, 00c16c], 5字节的记录头[00c16d, 00c171], 记录的数据[00c172, 00c4d1]</li>
+</ul>
+<p>我们再看下每个记录的具体存储:</p>
+<ul>
+<li>长度: 1或者2个字节的长度字段, 说明<strong>内容长度</strong></li>
+<li>5个字节的记录头</li>
+<li>33个字节的记录说明</li>
+<li>记录的具体内容, 记录头前面的1或者2个字节就是说明这个记录的内容长度的</li>
+</ul>
+<p>记录说明:</p>
+<ul>
+<li>4个字节的类型信息</li>
+<li>8个字节的id</li>
+<li>6个字节的事务id</li>
+<li>7个字节的回滚指针</li>
+<li>4个字节的非压缩长度</li>
+<li>4个字节的压缩长度</li>
+</ul>
+<p>存储结构如下图所示,<br><img src="https://picturestore.nos-eastchina1.126.net/mysql/SDI%E5%AD%98%E5%82%A8%E9%A1%B5.jpg" alt="SDI存储页"></p>
+<ol start="3">
+<li>SDI记录遍历流程</li>
+</ol>
+<ul>
+<li>从最小记录计算第1条记录, 00c063 + 010f = 00c172</li>
+<li>计算第2条记录, 00c172 + ff0d = 00c07f</li>
+<li>计算第3条记录: 00c07f + fff1 = 00c070</li>
+</ul>
+<p>注意: 游标以每个记录的内容开始, 例如最小记录的开始位置为00c063, 而不是00c05e。计算的下一个记录位置, 也是内容开始的位置。</p>
+<ol start="4">
+<li>如何查看SDI压缩后的数据</li>
+</ol>
+<ul>
+<li>首先通过bin/ibd2sdi工具, 将ibd文件中的sdi信息打印</li>
+<li>从打印中的信息中, 选择其中一项</li>
+<li><p>从选中的一项中抽出object字段, 将其压缩, 这里我们使用python脚本进行压缩, 压缩方式使用zlib</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/env python</span><br><span class="line"># -*- coding=utf-8 -*-</span><br><span class="line">#</span><br><span class="line">import os</span><br><span class="line">import sys</span><br><span class="line">import json</span><br><span class="line">import time</span><br><span class="line">import datetime</span><br><span class="line">import hashlib</span><br><span class="line">import zlib</span><br><span class="line"></span><br><span class="line">reload(sys)</span><br><span class="line">sys.setdefaultencoding(&quot;utf-8&quot;)</span><br><span class="line"></span><br><span class="line">def help():</span><br><span class="line">    f = open(&quot;./test.data&quot;)</span><br><span class="line">    l = f.readline()</span><br><span class="line">    d = zlib.compress(l)</span><br><span class="line">    f2 = open(&quot;./tmp.data&quot;, &apos;w+&apos;)</span><br><span class="line">    f2.write(d)</span><br><span class="line"></span><br><span class="line">help()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>对比压缩后的数据以及表空间存储的数据</p>
+</li>
+</ul>
+<h2 id="三-DD表空间"><a href="#三-DD表空间" class="headerlink" title="三. DD表空间"></a>三. DD表空间</h2><ol>
+<li>InnoDB常用表空间</li>
+</ol>
+<ul>
+<li>表空间占用4个字节, 最大值为0xffff ffff, 这个表空间是无效的, 没有使用</li>
+<li><code>0xffff fffe</code> 是data dicitonary的表空间, 也就是mysql.ibd</li>
+<li><code>0xffff fffd</code> 是临时表空间, 也就是ibtmp1.ibd</li>
+<li>[<code>0xffff fffc</code>, <code>0xffff fff0</code>]是为日志准备的</li>
+<li>[<code>0xffff ffef</code>, <code>0xffff ff70</code>]是undo log</li>
+<li>[<code>0x0000 0002</code>, <code>0xffff ff6f</code>]是可以正常使用的表空间</li>
+<li>1是 <code>sys/sys_config</code> 表空间</li>
+<li>0是系统表空间, 也就是ibdata1</li>
+</ul>
+<ol start="2">
+<li>DD表空间存储</li>
+</ol>
+<p><img src="https://picturestore.nos-eastchina1.126.net/mysql/%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%BB%93%E6%9E%84.jpg" alt="image"></p>
+<ul>
+<li>DD表空间存储结构与一般的独立表空间存储结构是相同的</li>
+<li>第4页(page 3)是SDI存储的root page, SDI以B+树进行组织</li>
+<li>除了SDI信息外, 具体的元数据表也存储在这个表空间中, 存储方式与一般的表是一样的。</li>
+</ul>
+<h2 id="四-总结与思考"><a href="#四-总结与思考" class="headerlink" title="四. 总结与思考"></a>四. 总结与思考</h2><ol>
+<li>本文主要介绍了Mysql数据字典的概念以及数据字典的存储, 这里我们简单总结一下,</li>
+</ol>
+<ul>
+<li>系统表以及我们创建的表, 元信息都存储在数据字典中</li>
+<li>我们自己创建的表的元信息存储在系统表中, 同时也会序列化到自己的表空间中</li>
+<li>系统表的元信息, 存储在系统表的数据字典对象中, 这些信息会被序列化到mysql.ibd文件中</li>
+<li>SDI信息以B+树的方式进行组织</li>
+</ul>
+<ol start="2">
+<li>思考</li>
+</ol>
+<ul>
+<li>DD是数据库对象的合集, Mysql server层以及InnoDB层都需要这些信息, 他们是如何具体操作的?</li>
+<li>DDL的原子性是如何实现的?</li>
+</ul>
+<h2 id="五-参考"><a href="#五-参考" class="headerlink" title="五. 参考"></a>五. 参考</h2><ol>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/data-dictionary-schema.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/data-dictionary-schema.html</a></li>
+</ol>
 
       
     </div>
@@ -533,7 +625,7 @@
         </li>
         <li class="post-copyright-link">
             <strong>本文链接：</strong>
-            <a href="/2018/11/05/LT-ET/" title="水平触发与边沿触发">2018/11/05/LT-ET/</a>
+            <a href="/2020/11/09/innodb-dd/" title="InnoDB Data Dictionary">2020/11/09/innodb-dd/</a>
         </li>
         <li class="post-copyright-license">
             <strong>版权声明： </strong>
@@ -551,8 +643,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/11/01/load_balance/" rel="next" title="负载均衡">
-                <i class="fa fa-chevron-left"></i> 负载均衡
+              <a href="/2020/10/12/InnoDB_DataPage/" rel="next" title="InnoDB数据页存储">
+                <i class="fa fa-chevron-left"></i> InnoDB数据页存储
               </a>
             
           </div>
@@ -560,10 +652,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/11/05/net-byte-order/" rel="prev" title="字节序与位序">
-                字节序与位序 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -698,7 +786,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一-基础"><span class="nav-text">一. 基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-水平触发"><span class="nav-text">1.1 水平触发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-边沿触发"><span class="nav-text">1.2 边沿触发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-选择"><span class="nav-text">1.3 选择</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二-参考"><span class="nav-text">二. 参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-基础知识"><span class="nav-text">一. 基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-问题"><span class="nav-text">1.1 问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-DD存储"><span class="nav-text">1.2 DD存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-如何查看数据字典"><span class="nav-text">1.3 如何查看数据字典</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-Serialized-Dictionary-Information-SDI"><span class="nav-text">1.4 Serialized Dictionary Information(SDI)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-SDI存储页示例"><span class="nav-text">二. SDI存储页示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三-DD表空间"><span class="nav-text">三. DD表空间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四-总结与思考"><span class="nav-text">四. 总结与思考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五-参考"><span class="nav-text">五. 参考</span></a></li></ol></div>
             
 
           </div>

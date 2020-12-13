@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Nginx,Tcp,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一. 背景介绍1.1 业务背景网校服务正在向K8S迁移，我们有两个服务之前是绑定到一台机器上部署的，二者之间通过IP直接访问，如下图所示，  调用关系非常简单，服务A调用了服务B，这里简单说明下服务A和服务B，  服务A基于Golang的Gin框架开发，使用Http长连接访问服务B 服务B基于C++的BRPC开发  我们想把两个服务进行拆分，通过域名访问。拆分后，访问链路变成了下图，  在拆分之后">
+<meta name="keywords" content="Nginx,Tcp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx Connection Reset 问题排查">
+<meta property="og:url" content="http://yoursite.com/2020/12/13/nginx-connection-reset/index.html">
+<meta property="og:site_name" content="随园">
+<meta property="og:description" content="一. 背景介绍1.1 业务背景网校服务正在向K8S迁移，我们有两个服务之前是绑定到一台机器上部署的，二者之间通过IP直接访问，如下图所示，  调用关系非常简单，服务A调用了服务B，这里简单说明下服务A和服务B，  服务A基于Golang的Gin框架开发，使用Http长连接访问服务B 服务B基于C++的BRPC开发  我们想把两个服务进行拆分，通过域名访问。拆分后，访问链路变成了下图，  在拆分之后">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/%E8%BF%9E%E6%8E%A5%E9%87%8D%E7%BD%AE/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8.jpg">
+<meta property="og:image" content="https://picturestore.nos-eastchina1.126.net/%E8%BF%9E%E6%8E%A5%E9%87%8D%E7%BD%AE/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A82.jpg">
+<meta property="og:updated_time" content="2020-12-13T11:00:34.308Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Nginx Connection Reset 问题排查">
+<meta name="twitter:description" content="一. 背景介绍1.1 业务背景网校服务正在向K8S迁移，我们有两个服务之前是绑定到一台机器上部署的，二者之间通过IP直接访问，如下图所示，  调用关系非常简单，服务A调用了服务B，这里简单说明下服务A和服务B，  服务A基于Golang的Gin框架开发，使用Http长连接访问服务B 服务B基于C++的BRPC开发  我们想把两个服务进行拆分，通过域名访问。拆分后，访问链路变成了下图，  在拆分之后">
+<meta name="twitter:image" content="https://picturestore.nos-eastchina1.126.net/%E8%BF%9E%E6%8E%A5%E9%87%8D%E7%BD%AE/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/12/13/nginx-connection-reset/">
+
+
+
+
+
+  <title>Nginx Connection Reset 问题排查 | 随园</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">随园</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/13/nginx-connection-reset/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="hongbshi">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="随园">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Nginx Connection Reset 问题排查</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-13T18:58:14+08:00">
+                2020-12-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">nginx</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2020/12/13/nginx-connection-reset/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/12/13/nginx-connection-reset/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2020/12/13/nginx-connection-reset/" class="leancloud_visitors" data-flag-title="Nginx Connection Reset 问题排查">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">Visitors&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="一-背景介绍"><a href="#一-背景介绍" class="headerlink" title="一. 背景介绍"></a>一. 背景介绍</h2><h3 id="1-1-业务背景"><a href="#1-1-业务背景" class="headerlink" title="1.1 业务背景"></a>1.1 业务背景</h3><p>网校服务正在向<code>K8S</code>迁移，我们有两个服务之前是绑定到一台机器上部署的，二者之间通过<code>IP</code>直接访问，如下图所示，</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/%E8%BF%9E%E6%8E%A5%E9%87%8D%E7%BD%AE/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8.jpg" alt="image"></p>
+<p>调用关系非常简单，<code>服务A</code>调用了<code>服务B</code>，这里简单说明下<code>服务A</code>和<code>服务B</code>，</p>
+<ul>
+<li><code>服务A</code>基于<code>Golang</code>的<code>Gin</code>框架开发，使用<code>Http</code>长连接访问<code>服务B</code></li>
+<li><code>服务B</code>基于<code>C++</code>的<code>BRPC</code>开发</li>
+</ul>
+<p>我们想把两个服务进行拆分，通过域名访问。拆分后，访问链路变成了下图，</p>
+<p><img src="https://picturestore.nos-eastchina1.126.net/%E8%BF%9E%E6%8E%A5%E9%87%8D%E7%BD%AE/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A82.jpg" alt="image"></p>
+<p>在拆分之后，我们发现<code>服务A</code>出现了大量的<code>connection reset by peer</code>的错误，而且这些错误基本都是集中出现，出现的时间点也没有什么规律，本文是对排查过程的简单总结。</p>
+<h3 id="1-2-Tcp-Reset简介"><a href="#1-2-Tcp-Reset简介" class="headerlink" title="1.2 Tcp Reset简介"></a>1.2 Tcp Reset简介</h3><p><code>Tcp</code>发送<code>Reset</code>包有很多种情况，比如说：服务端的全连接队列已满，无法接受新的连接请求；服务端已经关闭连接，客户端仍然向其发送数据；服务端没有处理完客户端发送的所有数据。还有很多其他的情况，我们这里就不再一一列举。本文主要介绍其中的2种。</p>
+<ol>
+<li><p>服务端已经关闭连接，客户端仍然发送数据，这种情况比较容易模拟，也比较容易理解。</p>
+</li>
+<li><p>我们这里介绍下，服务端没有处理完客户端数据的情况。对于客户端发送的数据, 服务端应用层没有读取完, 就关闭了连接, 服务端会发送<code>Reset</code>。这里是为什么呢？思考之后，不难发现， 这是<code>Tcp</code>可靠性的保证, <code>Tcp</code>需要保证客户端发送的数据, 服务端应用层都能收到，如果服务端应用层没有读取数据，就应该通知客户端，怎么通知呢，就是通过<code>Tcp Reset</code>包。下面给出一个简单的示例程序，</p>
+</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;netinet/in.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;arpa/inet.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PORT 8211</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> send_sk = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(send_sk == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"socket failed  "</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">s_addr</span>;</span></span><br><span class="line">    <span class="keyword">socklen_t</span> len = <span class="keyword">sizeof</span>(s_addr);</span><br><span class="line">    bzero(&amp;s_addr, <span class="keyword">sizeof</span>(s_addr));</span><br><span class="line">    s_addr.sin_family = AF_INET;</span><br><span class="line">    inet_pton(AF_INET, <span class="string">"127.0.0.1"</span>, &amp;s_addr.sin_addr);</span><br><span class="line">    s_addr.sin_port = htons(PORT);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(connect(send_sk, (struct sockaddr*)&amp;s_addr, len) == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"connect fail  "</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span> pcContent[<span class="number">1028</span>]=&#123;<span class="number">0</span>&#125;;</span><br><span class="line">    write(send_sk, pcContent, <span class="number">1028</span>);</span><br><span class="line"></span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    close(send_sk);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>编译<code>gcc client.c -o client</code></li>
+<li>以上是客户端程序, 客户端发送了1028个字节给服务端，等待1s之后，关闭连接。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;netinet/in.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;arpa/inet.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PORT 8211</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BACKLOG 10</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MAXRECVLEN 1024</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> buf[MAXRECVLEN];</span><br><span class="line">    <span class="keyword">int</span> listenfd, connectfd;   <span class="comment">/* socket descriptors */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">server</span>;</span> <span class="comment">/* server's address information */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">client</span>;</span> <span class="comment">/* client's address information */</span></span><br><span class="line">    <span class="keyword">socklen_t</span> addrlen;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> ((listenfd = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>)) == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"socket() error. Failed to initiate a socket"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* set socket option */</span></span><br><span class="line">    <span class="keyword">int</span> opt = SO_REUSEADDR;</span><br><span class="line">    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &amp;opt, <span class="keyword">sizeof</span>(opt));</span><br><span class="line"></span><br><span class="line">    bzero(&amp;server, <span class="keyword">sizeof</span>(server));</span><br><span class="line">    server.sin_family = AF_INET;</span><br><span class="line">    server.sin_port = htons(PORT);</span><br><span class="line">    server.sin_addr.s_addr = htonl(INADDR_ANY);</span><br><span class="line">    <span class="keyword">if</span>(bind(listenfd, (struct sockaddr *)&amp;server, <span class="keyword">sizeof</span>(server)) == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"Bind() error."</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(listen(listenfd, BACKLOG) == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"listen() error. \n"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    addrlen = <span class="keyword">sizeof</span>(client);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"wait connect\n"</span>);</span><br><span class="line">    <span class="keyword">if</span>((connectfd=accept(listenfd,(struct sockaddr *)&amp;client, &amp;addrlen))==<span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">     perror(<span class="string">"accept() error. \n"</span>);</span><br><span class="line">     <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"connectfd is %d\n"</span>, connectfd);</span><br><span class="line">    <span class="keyword">int</span> ans = recv(connectfd, buf, MAXRECVLEN, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"read data size: %d\n"</span>, ans);</span><br><span class="line">    close(listenfd); <span class="comment">/* close listenfd */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>编译<code>gcc server.c -o server</code></li>
+<li>服务端启动后, 等待客户端的连接。客户端连接之后，服务端只接收了1024个字节, 就关闭了连接。</li>
+</ul>
+<h3 id="1-3-Nginx长连接的一些设置参数"><a href="#1-3-Nginx长连接的一些设置参数" class="headerlink" title="1.3 Nginx长连接的一些设置参数"></a>1.3 Nginx长连接的一些设置参数</h3><p>这里给出网关<code>Nginx</code>的一些配置，网关<code>Nginx</code>是<code>1.15.8</code>版本，这里只列了其中一部分配置，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">http&#123;</span><br><span class="line">	upstream backend&#123;</span><br><span class="line">		keepalive 100;</span><br><span class="line">		#Nginx 1.15.3之后可以设置，这里是默认配置</span><br><span class="line">		keepalive_timeout 60s;</span><br><span class="line">		#Nginx 1.15.3之后可以设置，这里是默认配置</span><br><span class="line">		keepalive_requests 100;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	server&#123;</span><br><span class="line">		keepalive_timeout 20s;</span><br><span class="line">		keepalive_requests 100;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><code>server</code>中的<code>keepalive_timeout</code>, 意思是<code>Nginx</code>作为服务端，对于客户端的长连接请求，如果20s内，没有收到新的请求，就会关闭这个连接。</li>
+<li><code>server</code>中的<code>keepalive_requests</code>，意思是对于客户端的单个长连接，最多处理<code>100</code>个请求，处理完<code>100</code>个请求后，就关闭这个连接，不再接收新的请求。</li>
+<li><code>upstream</code>中的<code>keepalive</code>，意思是这个<code>upstream</code>最多的空闲长连接数</li>
+<li><code>upstream</code>中的<code>keepalive_timeout</code>，意思是<code>Nginx</code>作为客户端，与<code>upstream</code>建立长连接后，如果<code>60s</code>内没有使用，就关闭这个长连接，不再使用。</li>
+<li><code>upstream</code>中的<code>keepalive_requests</code>，意思是<code>Nginx</code>作为客户端，与<code>upstream</code>建立的长连接，单个连接最多发送<code>100</code>个请求，超过之后，就关闭连接。</li>
+</ul>
+<h3 id="1-4-Golang服务的长连接设置"><a href="#1-4-Golang服务的长连接设置" class="headerlink" title="1.4 Golang服务的长连接设置"></a>1.4 Golang服务的长连接设置</h3><p><code>Golang</code>服务在访问网关<code>Nginx</code>时，充当客户端的角色，作为客户端的配置如下，我们这里只列出其中一部分，<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//</span></span><br><span class="line">transport = http.Transport&#123;&#125;</span><br><span class="line">transport.MaxIdleConns = <span class="number">100</span></span><br><span class="line">transport.MaxIdleConnsPerHost = <span class="number">100</span></span><br><span class="line">transport.IdleConnTimeout = <span class="number">60</span> * time.Second</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">client = http.Client&#123;Timeout: <span class="number">300</span> * time.Millisecond&#125;</span><br><span class="line">client.Transport = &amp;transport</span><br></pre></td></tr></table></figure></p>
+<p>这里重点讲下<code>transport.IdleConnTimeout</code>的含义，它的意思是单个长连接，如果<code>60s</code>内没有被使用，就不再使用这个长连接发送请求。</p>
+<h2 id="二-问题排查"><a href="#二-问题排查" class="headerlink" title="二. 问题排查"></a>二. 问题排查</h2><p>服务拆分之后，<code>Golang</code>服务出现了大量的<code>connection reset by peer</code>错误，很明显，这个错误是网关<code>Nginx</code>发送给<code>Golang</code>服务的。问题的排查可以分为3个阶段，这里我们一一介绍。</p>
+<h3 id="2-1-超时设置"><a href="#2-1-超时设置" class="headerlink" title="2.1 超时设置"></a>2.1 超时设置</h3><p>之前一直认为，网关<code>Nginx server</code>中的<code>keepalive_timeout</code>设置的是<code>75s</code>，也就是说<code>Nginx</code>过了<code>75s</code>才关闭这个长连接。问题排查的时候，问了下网关那边的具体配置，告诉我是<code>20s</code>。这时候就想，应该是因为我们<code>Golang</code>服务设置的超时时间是<code>60s</code>导致的。当单个长连接超过<code>20s</code>没有被使用后，<code>Golang</code>服务认为这个长连接还可以使用，但是网关<code>Nginx</code>认为已经超时，所以<code>Golang</code>服务再次发送请求，<code>Nginx</code>会发送<code>Tcp Reset</code>包。</p>
+<p>将<code>transport.IdleConnTimeout</code>设置为<code>15s</code>后， 本以为这个问题一定能解决，但是发现还是会出现<code>connection reset by peer</code>。</p>
+<h3 id="2-2-长连接处理请求数设置"><a href="#2-2-长连接处理请求数设置" class="headerlink" title="2.2 长连接处理请求数设置"></a>2.2 长连接处理请求数设置</h3><p>修改了超时时间之后，发现并没有解决<code>connection reset by peer</code>的问题。之后，又想到是不是<code>Nginx server</code>中的<code>keepalive_requests</code>设置导致的。<code>Golang</code>服务的长连接，并没有设置单个长连接可以发送的请求数，但是<code>Nginx</code>在单个长连接上，只会处理<code>100</code>个请求，超过<code>100</code>请求后，<code>Nginx</code>会关闭连接，这时候如果<code>Golang</code>服务发送了请求，<code>Nginx</code>就会发送<code>Tcp Reset</code>包。</p>
+<p>之后，想要设置<code>Golang Http Client</code>的长连接处理请求数，找了半天，并没有找到哪个配置项可以配置这个值（这里如果有知道的，可以和我说下）。</p>
+<p>没找到配置项后，就想先抓包看下吧，抓到包之后就发现了问题不在这里。</p>
+<h3 id="2-3-找到原因并解决"><a href="#2-3-找到原因并解决" class="headerlink" title="2.3 找到原因并解决"></a>2.3 找到原因并解决</h3><p>想要设置<code>Golang</code>服务作为客户端，单个长连接最多处理的请求数无果后，进行了抓包，抓包结果显示，</p>
+<ul>
+<li>单个长连接并没有处理到<code>100</code>个请求，<code>Nginx</code>就发送了<code>Tcp Reset</code>包。</li>
+<li>收到<code>Tcp Reset</code>包的时间点，还有很多<code>Tcp Fin</code>包。</li>
+</ul>
+<p>之后，排查网关日志发现，我们出现<code>connection reset by peer</code>错误的时候，网关也出现了大量的<code>init_worker()</code>的错误。这时候就感觉是网关<code>Nginx Reload</code>导致的<code>connection reset by peer</code>。</p>
+<p>然后，我们复现了这个现象，晚上的时候，让网关<code>Nginx</code>更改配置，<code>Reload</code>服务，发现我们果然又出现了<code>connection reset by peer</code>的错误，到这里基本上就定位了问题原因。</p>
+<p>我们思考下，为什么网关<code>Nginx</code>重启，会导致我们的服务收到<code>Tcp Reset</code>包，不是说<code>Nginx</code>是平滑重启，不影响服务的嘛？思考之后，原因如下，</p>
+<ul>
+<li><code>Nginx Reload</code>在创建新的<code>Worker</code>进程之后，需要向老的<code>Worker</code>发送信号，要求其不再接收新的连接请求，并处理完当前连接的请求后，关闭连接。</li>
+<li>很明显，我们<code>Golang</code>服务是与<code>Nginx</code>老的<code>Worker</code>建立的长连接，当老的<code>Worker</code>处理完一个请求后，发送结果给<code>Golang</code>服务，<code>Golang</code>服务收到结果之后，可能会继续发送请求，但是这个时候，<code>Nginx</code>老的<code>Worker</code>可能已经关闭了连接，故而发送<code>Tcp Reset</code>包给<code>Golang</code>服务。</li>
+<li>这里留个问题，有没有某种情况是，<code>Nginx Worker</code>收到请求后，没有处理就关闭了连接，进而导致服务端<code>Nginx</code>发送<code>Tcp Reset</code>包给客户端？</li>
+</ul>
+<p>找到原因之后，就需要解决这个问题。解决方案有两种，</p>
+<ul>
+<li><code>Golang</code>服务的长连接改为短连接，我们使用的就是这一种</li>
+<li><code>Golang</code>服务继续使用长连接，当出现<code>connection reset by peer</code>错误后，进行重试。这里需要注意的是，因为<code>Nginx</code>正在<code>Reload</code>，大量的长连接都会失效，所以可能需要重试很多次。</li>
+</ul>
+<h2 id="三-总结"><a href="#三-总结" class="headerlink" title="三. 总结"></a>三. 总结</h2><p><code>Nginx</code>是非常优秀的负载均衡、反向代理工具，业界使用的非常广泛，<code>Nginx</code>的高性能、模块化设计也被很多软件所模仿。我们在使用<code>Nginx</code>的时候，可以多思考，多总结，加深对<code>Nginx</code>的理解。<code>Http</code>的长连接和短连接各有利弊，我们要根据自己的实际场景进行选择。排查问题的时候，多思考，任何一个问题背后都可能有很丰富的知识点。</p>
+
+      
+    </div>
+    
+    
+    
+    <div>
+        
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">------ 本文结束------</div>
+    
+</div>
+
+        
+    </div>
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>谢谢你的支持！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://picturestore.nos-eastchina1.126.net/%E5%85%B6%E4%BB%96/WechatIMG2.png" alt="hongbshi WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://picturestore.nos-eastchina1.126.net/%E5%85%B6%E4%BB%96/WechatIMG5.jpeg" alt="hongbshi Alipay">
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+    
+    <div>
+        <ul class="post-copyright">
+        <li class="post-copyright-author">
+            <strong>本文作者：</strong>hongbshi
+        </li>
+        <li class="post-copyright-link">
+            <strong>本文链接：</strong>
+            <a href="/2020/12/13/nginx-connection-reset/" title="Nginx Connection Reset 问题排查">2020/12/13/nginx-connection-reset/</a>
+        </li>
+        <li class="post-copyright-license">
+            <strong>版权声明： </strong>
+            本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0 CN</a> 许可协议。转载请注明出处！
+        </li>
+        </ul>
+    </div>
+    
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/11/09/innodb-dd/" rel="next" title="InnoDB Data Dictionary">
+                <i class="fa fa-chevron-left"></i> InnoDB Data Dictionary
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">hongbshi</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-背景介绍"><span class="nav-text">一. 背景介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-业务背景"><span class="nav-text">1.1 业务背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-Tcp-Reset简介"><span class="nav-text">1.2 Tcp Reset简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-Nginx长连接的一些设置参数"><span class="nav-text">1.3 Nginx长连接的一些设置参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-Golang服务的长连接设置"><span class="nav-text">1.4 Golang服务的长连接设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-问题排查"><span class="nav-text">二. 问题排查</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-超时设置"><span class="nav-text">2.1 超时设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-长连接处理请求数设置"><span class="nav-text">2.2 长连接处理请求数设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-找到原因并解决"><span class="nav-text">2.3 找到原因并解决</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三-总结"><span class="nav-text">三. 总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">hongbshi</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'NNyFD1qeChQyvgVBdtmlvTUp-gzGzoHsz',
+        appKey: 'kOthqdrxbt51oKdmYiYw9Jou',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("NNyFD1qeChQyvgVBdtmlvTUp-gzGzoHsz", "kOthqdrxbt51oKdmYiYw9Jou");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -81,7 +81,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="随园">
-<meta property="og:url" content="http://yoursite.com/tags/nginx/index.html">
+<meta property="og:url" content="http://yoursite.com/tags/Nginx/index.html">
 <meta property="og:site_name" content="随园">
 <meta property="og:locale" content="default">
 <meta name="twitter:card" content="summary">
@@ -115,13 +115,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/tags/nginx/">
+  <link rel="canonical" href="http://yoursite.com/tags/Nginx/">
 
 
 
 
 
-  <title>Tag: nginx | 随园</title>
+  <title>Tag: Nginx | 随园</title>
   
 
 
@@ -253,7 +253,7 @@
 
     <div id="posts" class="posts-collapse">
       <div class="collection-title">
-        <h1>nginx<small>Tag</small>
+        <h1>Nginx<small>Tag</small>
         </h1>
       </div>
 
@@ -265,69 +265,17 @@
 
       <h2 class="post-title">
         
-            <a class="post-title-link" href="/2018/11/13/nginx-config-store-summarize/" itemprop="url">
+            <a class="post-title-link" href="/2020/12/13/nginx-connection-reset/" itemprop="url">
               
-                <span itemprop="name">nginx 配置存储概述</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2018-11-13T15:56:40+08:00" content="2018-11-13">
-          11-13
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-      
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/11/12/nginx-listen-socket/" itemprop="url">
-              
-                <span itemprop="name">nginx listen指令处理流程</span>
+                <span itemprop="name">Nginx Connection Reset 问题排查</span>
               
             </a>
         
       </h2>
 
       <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2018-11-12T16:26:59+08:00" content="2018-11-12">
-          11-12
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-      
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/10/31/nginx_memory_manage/" itemprop="url">
-              
-                <span itemprop="name">nginx内存管理</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2018-10-31T13:48:37+08:00" content="2018-10-31">
-          10-31
+        <time class="post-time" itemprop="dateCreated" datetime="2020-12-13T18:58:14+08:00" content="2020-12-13">
+          12-13
         </time>
       </div>
 
@@ -387,7 +335,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -409,7 +357,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -1019,6 +967,63 @@
               error: function(counter, error) {
                 console.log('Failed to save Visitor num, with error message: ' + error.message);
               }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+     }
             });
           } else {
             var newcounter = new Counter();
